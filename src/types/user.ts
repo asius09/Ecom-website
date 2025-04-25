@@ -1,8 +1,10 @@
-export type User = {
-    id: string;
-    email: string;
-    full_name?: string;
-    role?: "user" | "admin";
-    created_at: string;
-  };
-  
+export interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  image_url: string;
+  price: number;
+  in_stock: boolean;
+  created_at: string;
+}

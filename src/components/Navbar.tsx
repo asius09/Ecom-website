@@ -43,7 +43,7 @@ export function Navbar() {
       href: "/account",
       label: "Account",
       icon: <User className="h-5 w-5" />,
-      active: pathname === "/account",
+      active: pathname === "/account/new",
     },
     {
       type: "dropdown",
@@ -58,7 +58,7 @@ export function Navbar() {
       href: "/orders",
       label: "Orders",
       icon: <Truck className="h-5 w-5" />,
-      active: pathname === "/orders",
+      active: pathname === "/orders/new",
     },
     {
       type: "button",
@@ -84,17 +84,17 @@ export function Navbar() {
 
   const rightRoutes = [
     {
-      href: "/account",
+      href: "/account/new",
       label: "Account",
       icon: <User className="h-5 w-5" />,
       active: pathname === "/account",
       className: "hidden md:flex",
     },
     {
-      href: "/wishlist",
+      href: "/wishlist/new",
       label: "Wishlist",
       icon: <Heart className="h-5 w-5" />,
-      active: pathname === "/wishlist",
+      active: pathname === "/wishlist/new",
     },
     {
       href: "/cart",

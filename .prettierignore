@@ -1,0 +1,31 @@
+# Ignore build artifacts
+.next/
+_next/
+__tmp__/
+dist/
+target/
+compiled/
+lerna.json
+
+# Test timings
+test-timings.json
+
+# Lock files
+pnpm-lock.yaml
+
+# Packages (example for Next.js internals)
+packages/next/src/bundles/webpack/packages/*.runtime.js
+packages/next/src/bundles/webpack/packages/lazy-compilation-*.js
+packages/next-swc/crates/**/tests/**/output*
+
+# Other common exclusions
+node_modules/
+**/__tmp__/
+**/dist/
+*.log
+playwright-report
+
+# env files 
+.env.*
+.env
+.env.locals

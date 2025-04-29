@@ -23,22 +23,28 @@ export function ProductCard({
 }: ProductCardProps) {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
-  const handleAddToCart = () => {
-    // Add to cart logic
-  };
-
-  const handleBuyNow = () => {
-    // Buy now logic
-  };
-
   const toggleWishlist = () => {
     setIsWishlisted(!isWishlisted);
   };
 
+  const cardActionBtns = [
+    {
+      title: "Add to Cart",
+      icon: <ShoppingCart className="mr-1 h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />,
+      onClick: () => {},
+      variant: "outline" as const,
+    },
+    {
+      title: "Buy Now",
+      onClick: () => {},
+      variant: "default" as const,
+    },
+  ];
+
   return (
-    <div className="bg-card rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow w-full max-w-[350px] min-w-[280px]">
+    <div className="bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow w-full max-w-[280px] min-w-[150px] sm:min-w-[180px]">
       {imageUrl && (
-        <div className="relative aspect-square">
+        <div className="relative aspect-[4/3]">
           <img
             src={imageUrl}
             alt={name}
@@ -46,59 +52,56 @@ export function ProductCard({
           />
           <button
             onClick={toggleWishlist}
-            className="absolute top-2 right-2 p-2 rounded-full bg-background/80 hover:bg-background transition-colors cursor-pointer"
+            className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-background/80 hover:bg-background transition-colors cursor-pointer"
             aria-label="Add to wishlist"
           >
             <Heart
-              className={`h-5 w-5 ${
+              className={`h-3 w-3 sm:h-4 sm:w-4 ${
                 isWishlisted ? "text-red-500 fill-red-500" : "text-foreground"
               }`}
             />
           </button>
         </div>
       )}
-      <div className="p-4 flex flex-col">
-        <h3 className="text-lg font-semibold text-card-foreground mb-2 truncate">
+      <div className="p-2 sm:p-3 flex flex-col">
+        <h3 className="text-sm sm:text-base font-semibold text-card-foreground mb-1 truncate">
           {name}
         </h3>
-        <div className="flex items-center gap-1 mb-2">
+        <div className="flex items-center gap-0.5 sm:gap-1 mb-1 sm:mb-1.5">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
-              className={`h-4 w-4 ${
+              className={`h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 ${
                 i < Math.floor(rating)
                   ? "text-yellow-400 fill-yellow-400"
                   : "text-muted-foreground"
               }`}
             />
           ))}
-          <span className="text-sm text-muted-foreground ml-1">
+          <span className="text-[9px] sm:text-xs text-muted-foreground ml-0.5 sm:ml-1">
             ({reviewCount})
           </span>
         </div>
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-grow">
+        <p className="text-[10px] sm:text-xs text-muted-foreground mb-2 sm:mb-3 line-clamp-2 flex-grow">
           {description}
         </p>
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-lg font-bold text-primary">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <span className="text-sm sm:text-base font-bold text-primary">
             ${price.toFixed(2)}
           </span>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="flex-1 min-w-0 cursor-pointer"
-            onClick={handleAddToCart}
-          >
-            <ShoppingCart className="mr-2 h-4 w-4" />
-            Add to Cart
-          </Button>
-          <Button
-            className="flex-1 min-w-0 cursor-pointer"
-            onClick={handleBuyNow}
-          >
-            Buy Now
-          </Button>
+        <div className="flex flex-col md:flex-row gap-3 md:gap-2">
+          {cardActionBtns.map((btn, index) => (
+            <Button
+              key={index}
+              variant={btn.variant}
+              className="w-full md:w-1/2 cursor-pointer h-7 sm:h-8 text-[10px] sm:text-xs px-2 sm:px-4"
+              onClick={btn.onClick}
+            >
+              {btn.icon && btn.icon}
+              {btn.title}
+            </Button>
+          ))}
         </div>
       </div>
     </div>

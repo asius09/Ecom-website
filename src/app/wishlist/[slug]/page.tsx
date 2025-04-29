@@ -3,6 +3,7 @@ import { ProductGrid } from "@/components/product/ProductGrid";
 import { useParams } from "next/navigation";
 import { Heart } from "lucide-react";
 
+
 const wishlistProducts = [
   {
     id: "1",
@@ -29,6 +30,7 @@ const wishlistProducts = [
 
 export default function WishlistPage() {
   const { slug } = useParams();
+
 
   return (
     <main className="container mx-auto px-4 py-8">

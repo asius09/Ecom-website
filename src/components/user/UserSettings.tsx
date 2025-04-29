@@ -3,11 +3,15 @@
 import { Button } from "@/components/ui/button";
 import { Bell, LifeBuoy, Shield } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LogOutBtn } from "@/components/LogOutBtn";
 
 export function UserSettings() {
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-8">Account Settings</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Account Settings</h1>
+        <LogOutBtn variant="button" />
+      </div>
 
       <Tabs defaultValue="notifications" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-3">

@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
-import { Moon, Sun, Monitor } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 
@@ -11,53 +11,60 @@ interface ModeToggleProps {
 
 export function ModeToggle({ label }: ModeToggleProps) {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState<boolean>(false);
 
   const toggleTheme = () => {
-    if (theme === "light") {
-      setTheme("dark");
-    } else if (theme === "dark") {
-      setTheme("system");
-    } else {
-      setTheme("light");
-    }
+    theme === "light" ? setTheme("dark") : setTheme("light");
   };
 
   const getThemeLabel = () => {
-    switch (theme) {
-      case "light":
-        return "Light";
-      case "dark":
-        return "Dark";
-      default:
-        return "System";
-    }
+    return theme === "light" ? "Light" : "Dark";
   };
 
   const getThemeIcon = () => {
-    switch (theme) {
-      case "light":
-        return <Sun className="h-[1.2rem] w-[1.2rem] text-foreground" />;
-      case "dark":
-        return <Moon className="h-[1.2rem] w-[1.2rem] text-foreground" />;
-      default:
-        return <Monitor className="h-[1.2rem] w-[1.2rem] text-foreground" />;
-    }
+    return theme === "light" ? (
+      <Sun className="h-[1.2rem] w-[1.2rem] text-foreground" />
+    ) : (
+      <Moon className="h-[1.2rem] w-[1.2rem] text-foreground" />
+    );
   };
 
-  return (
-    <div
-      className="flex items-center gap-2 cursor-pointer"
-      onClick={toggleTheme}
-    >
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="hover:bg-accent/50 border-border"
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    // Prevent rendering anything theme-dependent until mounted
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="hover:bg-accent/50 border-border rounded-sm px-2"
+        aria-label="Toggle theme"
+        role="button"
+        disabled
       >
-        {getThemeIcon()}
-        <span className="sr-only">Toggle theme</span>
+        {/* Maybe show a spinner or empty icon */}
       </Button>
-      {label && <span className="text-sm font-medium text-foreground">{getThemeLabel()}</span>}
-    </div>
+    );
+  }
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className={`hover:bg-accent/50 border-border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm ${
+        label ? "px-4" : "px-2"
+      }`}
+      onClick={toggleTheme}
+      aria-label="Toggle theme"
+      role="button"
+    >
+      {getThemeIcon()}
+      {label && (
+        <span className="ml-2 text-sm font-medium text-foreground">
+          {getThemeLabel()}
+        </span>
+      )}
+    </Button>
   );
 }

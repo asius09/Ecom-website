@@ -17,17 +17,22 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useSupabase } from "@/context/SupabaseProvider";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LogOutBtn } from "./LogOutBtn";
 
 export function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+
+  const { user, isLoading } = useSupabase();
   const [cartItems, setCartItems] = useState<number>(0);
 
   const categories = [
@@ -65,6 +70,10 @@ export function Navbar() {
       label: "Theme",
       component: <ModeToggle label={true} />,
     },
+    {
+      type: "button",
+      component: <LogOutBtn variant="text" />,
+    },
   ];
 
   const leftRoutes = [
@@ -95,6 +104,7 @@ export function Navbar() {
       label: "Wishlist",
       icon: <Heart className="h-5 w-5" />,
       active: pathname === "/wishlist/new",
+      className: "hidden md:flex",
     },
     {
       href: "/cart",
@@ -111,6 +121,29 @@ export function Navbar() {
     },
   ];
 
+  if (pathname === "/login" || pathname === "/signup") return null;
+
+  if (isLoading) {
+    return (
+      <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between mx-auto">
+          <div className="flex items-center gap-6">
+            <Link
+              key="logo-link"
+              href="/"
+              className="pl-2 md:pl-0 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            >
+              MyShop
+            </Link>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 bg-muted rounded-full animate-pulse" />
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between mx-auto">
@@ -119,13 +152,13 @@ export function Navbar() {
           <Link
             key="logo-link"
             href="/"
-            className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            className="pl-2 md:pl-0 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
           >
             MyShop
           </Link>
 
           {/* Main navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-4">
             {leftRoutes.map((route) =>
               route.type === "dropdown" ? (
                 <DropdownMenu
@@ -176,7 +209,7 @@ export function Navbar() {
         </div>
 
         {/* Search Bar */}
-        <div className="flex-1 max-w-md mx-4 hidden md:block">
+        <div className="flex-1 max-w-md mx-4">
           <Input
             type="search"
             placeholder="Search products..."
@@ -186,19 +219,33 @@ export function Navbar() {
 
         {/* Right Side Icons */}
         <div className="flex items-center gap-4">
-          {rightRoutes.map((route) => (
-            <Button
-              key={route.href}
-              variant="ghost"
-              size="icon"
-              className={`relative ${route.className}`}
-              asChild
-            >
-              <Link href={route.href}>{route.icon}</Link>
-            </Button>
-          ))}
+          {user ? (
+            rightRoutes.map((route) => (
+              <Button
+                key={route.href}
+                variant="ghost"
+                size="icon"
+                className={`relative ${route.className}`}
+                asChild
+              >
+                <Link href={route.href}>{route.icon}</Link>
+              </Button>
+            ))
+          ) : (
+            <div className="flex items-center gap-1 font-semibold text-sm">
+              <Link href="/login" className="hover:underline">
+                Login
+              </Link>
+              <span className="text-muted-foreground">/</span>
+              <Link href="/signup" className="hover:underline">
+                Sign Up
+              </Link>
+            </div>
+          )}
 
-          <ModeToggle />
+          <div className="hidden md:block">
+            <ModeToggle />
+          </div>
 
           {/* Mobile Menu Button */}
           <Button
@@ -213,7 +260,7 @@ export function Navbar() {
           {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden">
-              <div className="absolute top-0 right-0 h-[100dvh] w-72 bg-background border-l shadow-lg animate-slide-in">
+              <div className="absolute top-0 right-0 h-[100dvh] w-72 bg-background border-l shadow-lg animate slide-in">
                 <div className="flex justify-end">
                   <Button
                     variant="ghost"

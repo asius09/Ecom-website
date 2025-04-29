@@ -1,10 +1,7 @@
-export interface Product {
+export interface User {
   id: string;
   name: string;
-  slug: string;
-  description: string;
-  image_url: string;
-  price: number;
-  in_stock: boolean;
+  email: string;
   created_at: string;
+  isAdmin: boolean;
 }

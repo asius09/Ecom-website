@@ -36,6 +36,7 @@ export default function OrderPage() {
   const { slug } = useParams();
   const order = exampleOrders.find((order) => order.id === slug);
 
+
   if (!order) {
     return (
       <main className="container mx-auto px-4 py-8 flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center">

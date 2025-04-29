@@ -14,8 +14,10 @@ import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { login } from "../api/auth/action";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -29,8 +31,13 @@ export default function LoginPage() {
       const formData = new FormData();
       formData.append("email", email);
       formData.append("password", password);
-      await login(formData);
-      toast.success("Login successful!");
+      const success = await login(formData);
+      if (success) {
+        toast.success("Login successful!");
+        router.push("/");
+      } else {
+        throw new Error("Login failed");
+      }
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Login failed", {

@@ -3,8 +3,10 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  reviews: number;
+  review: number;
   image_url: string;
-  createdAt?: string;
+  createdAt: string;
   updatedAt?: string;
+  category?: string;
+  stock_quantity: number;
 }

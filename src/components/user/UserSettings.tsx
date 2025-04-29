@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Bell, LifeBuoy, Shield } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOutBtn } from "@/components/LogOutBtn";
+import { LogOutBtn } from "@/components/auth/LogOutBtn";
 
 export function UserSettings() {
   return (

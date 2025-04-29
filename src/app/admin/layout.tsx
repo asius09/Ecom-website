@@ -1,4 +1,4 @@
-"use client";
+
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { redirect } from "next/navigation";
 import { validAdmin } from "../api/auth/action";
@@ -10,7 +10,7 @@ export default async function AdminLayout({
 }) {
   const isAdmin = await validAdmin();
   if (!isAdmin) {
-    redirect("/unauthorized");
+    redirect("/");
   }
   return (
     <div className="flex min-h-screen">

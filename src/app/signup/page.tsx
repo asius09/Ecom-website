@@ -62,12 +62,17 @@ export default function SignupPage() {
       const data = new FormData();
       data.append("email", formData.email);
       data.append("password", formData.password);
+      data.append("name", formData.name);
 
-      await signup(data);
-
-      toast.success("Sign up successful!", {
-        description: "Please check your email to verify your account.",
-      });
+      const isSingup = await signup(data);
+      if (isSingup) {
+        toast.success("Sign up successful!", {
+          description: "Please check your email to verify your account.",
+        });
+        router.push("/login");
+      } else {
+        throw new Error("Failed to signup, Please Try again");
+      }
     } catch (error) {
       console.error("Sign up error:", error);
       toast.error("Sign up failed", {

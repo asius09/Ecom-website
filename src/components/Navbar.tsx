@@ -25,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOutBtn } from "./LogOutBtn";
+import { LogOutBtn } from "./auth/LogOutBtn";
 
 export function Navbar() {
   const pathname = usePathname();

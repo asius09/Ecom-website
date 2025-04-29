@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { signout } from "@/app/api/auth/action";
 
@@ -14,15 +13,15 @@ export function LogOutBtn({ variant = "button" }: LogOutBtnProps) {
 
   const handleLogout = async () => {
     try {
-      await signout();
-      toast.success("Logged out successfully");
-      router.refresh();
+      const success = await signout();
+      if (success) {
+        router.refresh();
+        router.push("/login");
+      } else {
+        throw new Error("Logout failed");
+      }
     } catch (error) {
       console.error("Logout error:", error);
-      toast.error("Logout failed", {
-        description:
-          error instanceof Error ? error.message : "An error occurred",
-      });
     }
   };
 
@@ -42,7 +41,7 @@ export function LogOutBtn({ variant = "button" }: LogOutBtnProps) {
     <Button
       variant="outline"
       size="sm"
-      className="hover:bg-accent/50 border-border rounded-sm px-2"
+      className="text-red-500 hover:text-red-600 hover:bg-accent/50 border-border rounded-sm px-2"
       onClick={handleLogout}
       aria-label="Log out"
     >

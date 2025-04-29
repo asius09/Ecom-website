@@ -1,7 +1,11 @@
+"use client";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { Footer } from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect } from "react";
+import { supabase } from "@/utils/supabase/client";
+import { createUser } from "./api/user/action";
 
 const products = [
   {
@@ -75,6 +79,36 @@ const categories = [
 ];
 
 export default function Home() {
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
+        if (error) {
+          throw new Error(`Error getting user: ${error.message}`);
+        }
+
+        if (user) {
+          const createdUser = await createUser({
+            id: user.id,
+            email: user.email!,
+            name: user.user_metadata?.name || "",
+          });
+          if (!createdUser) {
+            throw new Error("Failed to create user");
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Check user error:",
+          error instanceof Error ? error.message : "Unknown error"
+        );
+      }
+    };
+    checkUser();
+  }, []);
   return (
     <main className="container mx-auto px-4">
       {/* Hero Banner */}

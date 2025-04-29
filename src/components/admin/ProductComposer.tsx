@@ -13,6 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useDropzone, type DropzoneOptions } from "react-dropzone";
+import { createProduct } from "@/app/api/products/admin/action";
+import { Product } from "@/types/product";
+import { uploadImage } from "@/utils/supabase/uploadImage";
+import { toast } from "sonner";
 
 interface ProductFormData {
   name: string;
@@ -20,43 +24,88 @@ interface ProductFormData {
   price: string;
   quantity: number;
   images: File[];
-  inStock: boolean;
 }
 
 export function ProductComposer() {
-  const [productName, setProductName] = useState<string>("");
-  const [productDescription, setProductDescription] = useState<string>("");
-  const [productPrice, setProductPrice] = useState<string>("");
-  const [productQuantity, setProductQuantity] = useState<number>(0);
-  const [productImages, setProductImages] = useState<File[]>([]);
-  const [inStock, setInStock] = useState<boolean>(true);
+  const [formData, setFormData] = useState<ProductFormData>({
+    name: "",
+    description: "",
+    price: "",
+    quantity: 0,
+    images: [],
+  });
+  const [isOpen, setIsOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const dropzoneOptions: DropzoneOptions = {
     accept: {
       "image/*": [".jpeg", ".jpg", ".png"],
     },
     onDrop: (acceptedFiles: File[]) => {
-      setProductImages((prevImages) => [...prevImages, ...acceptedFiles]);
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...acceptedFiles],
+      }));
     },
   };
 
   const { getRootProps, getInputProps } = useDropzone(dropzoneOptions);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, quantity: Number(e.target.value) }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData: ProductFormData = {
-      name: productName,
-      description: productDescription,
-      price: productPrice,
-      quantity: productQuantity,
-      images: productImages,
-      inStock: inStock,
-    };
-    console.log("Submitting product:", formData);
+    setIsUploading(true);
+
+    try {
+      let imageUrl = "";
+      if (formData.images.length > 0) {
+        const uploadedUrl = await uploadImage(formData.images[0]);
+        if (!uploadedUrl) {
+          throw new Error("Failed to upload image");
+        }
+        imageUrl = uploadedUrl;
+      }
+
+      const product: Omit<Product, "id" | "createdAt" | "updatedAt"> = {
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        stock_quantity: formData.quantity,
+        review: 0,
+        image_url: imageUrl,
+      };
+
+      await createProduct(product);
+      toast.success("Product created successfully");
+      setIsOpen(false);
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        quantity: 0,
+        images: [],
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create product"
+      );
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Create Product</Button>
       </DialogTrigger>
@@ -65,27 +114,27 @@ export function ProductComposer() {
           <DialogTitle>Create New Product</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+          <section className="space-y-2">
             <Label htmlFor="name">Product Name</Label>
             <Input
               id="name"
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
+              value={formData.name}
+              onChange={handleChange}
               required
             />
-          </div>
+          </section>
 
-          <div className="space-y-2">
+          <section className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={productDescription}
-              onChange={(e) => setProductDescription(e.target.value)}
+              value={formData.description}
+              onChange={handleChange}
               required
             />
-          </div>
+          </section>
 
-          <div className="grid grid-cols-2 gap-4">
+          <section className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="price">Price</Label>
               <div className="relative">
@@ -96,8 +145,8 @@ export function ProductComposer() {
                   id="price"
                   type="text"
                   inputMode="decimal"
-                  value={productPrice}
-                  onChange={(e) => setProductPrice(e.target.value)}
+                  value={formData.price}
+                  onChange={handleChange}
                   className="pl-7"
                   required
                 />
@@ -108,27 +157,14 @@ export function ProductComposer() {
               <Input
                 id="quantity"
                 type="number"
-                value={productQuantity}
-                onChange={(e) => setProductQuantity(Number(e.target.value))}
+                value={formData.quantity}
+                onChange={handleQuantityChange}
                 required
               />
             </div>
-          </div>
+          </section>
 
-          <div className="space-y-2">
-            <Label htmlFor="inStock">Stock Status</Label>
-            <select
-              id="inStock"
-              value={inStock ? "true" : "false"}
-              onChange={(e) => setInStock(e.target.value === "true")}
-              className="block w-full p-2 border rounded-md bg-background"
-            >
-              <option value="true">In Stock</option>
-              <option value="false">Out of Stock</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
+          <section className="space-y-2">
             <Label>Product Images</Label>
             <div
               {...getRootProps()}
@@ -137,9 +173,9 @@ export function ProductComposer() {
               <input {...getInputProps()} />
               <p>Drag & drop some images here, or click to select files</p>
             </div>
-            {productImages.length > 0 && (
+            {formData.images.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mt-4">
-                {productImages.map((file, index) => (
+                {formData.images.map((file, index) => (
                   <img
                     key={index}
                     src={URL.createObjectURL(file)}
@@ -149,10 +185,10 @@ export function ProductComposer() {
                 ))}
               </div>
             )}
-          </div>
+          </section>
 
-          <Button type="submit" className="w-full">
-            Create Product
+          <Button type="submit" className="w-full" disabled={isUploading}>
+            {isUploading ? "Creating..." : "Create Product"}
           </Button>
         </form>
       </DialogContent>

@@ -3,48 +3,50 @@ import ProductDetail from "@/components/product/ProductDetail";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Product } from "@/types/product";
-
-const exampleProduct: Product = {
-  id: "prod_123",
-  name: "Premium Leather Office Chair",
-  description:
-    "Ergonomic executive chair with premium leather upholstery and adjustable features for maximum comfort.",
-  price: 299.99,
-  review: 4.7,
-  image_url:
-    "https://images.unsplash.com/photo-1519947486511-46149fa0a254?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  stock_quantity: 25,
-  createdAt: new Date().toISOString(),
-  category: "Furniture",
-};
+import { useAppSelector } from "@/lib/hooks";
 
 export default function ProductDetailsPage() {
-  const { slug } = useParams();
-  const [product, setProduct] = useState<Product | null>(exampleProduct);
-  const [loading, setLoading] = useState(false);
+  const { slug: productId } = useParams();
+  const { products } = useAppSelector((state) => state.products);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProduct = async () => {
+    if (!productId) {
+      setError("No Product Id or slug is present");
+      setLoading(false);
+      return;
+    }
+
+    const getProduct = async () => {
       try {
-        const response = await fetch(`/api/products/${slug}`);
-        if (!response.ok) {
-          throw new Error("Product not found");
+        setLoading(true);
+
+        if (products.length === 0) {
+          setError("No products available");
+          return;
         }
-        const data = await response.json();
-        setProduct(data);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch product"
+
+        const detailProduct = products.find(
+          (product) => product.id === productId
         );
+
+        if (!detailProduct) {
+          setError("Product not found");
+          return;
+        }
+
+        setProduct(detailProduct);
+      } catch (error) {
+        setError("Failed to fetch product details");
       } finally {
         setLoading(false);
       }
     };
 
-    // Uncomment to enable actual API fetching
-    // fetchProduct();
-  }, [slug]);
+    getProduct();
+  }, [productId, products]);
 
   if (loading) {
     return (

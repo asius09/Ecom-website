@@ -15,7 +15,7 @@ const wishlistSlice = createSlice({
   initialState,
   reducers: {
     setWishlist: (state, action: PayloadAction<WishlistItem[]>) => {
-      state.items = action.payload;
+      state.items = [...action.payload];
     },
     addToWishlist: (state, action: PayloadAction<WishlistItem>) => {
       const existingItem = state.items.find(

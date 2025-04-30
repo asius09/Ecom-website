@@ -1,4 +1,4 @@
-import { toggleWishlist as toggleWishlistAPI } from "@/app/api/products/action";
+import { toggleWishlist as toggleWishlistAPI } from "@/app/api/products/users/wishlist/action";
 import { toast } from "sonner";
 
 export const handleToggleWishlist = async (

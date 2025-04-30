@@ -37,7 +37,6 @@ export default function CartPage() {
   useEffect(() => {
     if (!userId) return;
 
-    // 1. Fetch initial cart data
     const fetchInitialCart = async () => {
       const { data, error } = await supabase
         .from("cart_items")
@@ -48,16 +47,13 @@ export default function CartPage() {
     };
 
     fetchInitialCart();
-
-    // 2. Setup realtime subscription
     const cleanup = setupCartRealtime(userId, dispatch);
 
     return () => {
-      cleanup(); // Cleanup on unmount
+      cleanup();
     };
   }, [userId, dispatch]);
 
-  // Calculate totals
   useEffect(() => {
     const newSubtotal = cartItems.reduce((acc, item) => {
       const product = products.find((p) => p.id === item.product_id);
@@ -68,7 +64,6 @@ export default function CartPage() {
     setTotal(newSubtotal + shipping);
   }, [cartItems, products, userId]);
 
-  // Debounced quantity update
   const debouncedUpdate = useCallback(
     debounce(async (itemId: string, newQuantity: number) => {
       try {
@@ -89,16 +84,12 @@ export default function CartPage() {
 
   const handleQuantityChange = (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-
-    // Optimistic update
     dispatch(updateQuantity({ id: itemId, quantity: newQuantity }));
-    // Debounced server update
     debouncedUpdate(itemId, newQuantity);
   };
 
   const handleRemoveItem = async (itemId: string) => {
     try {
-      // Optimistic update
       dispatch(removeFromCart(itemId));
       await handleRemoveFromCart(itemId, userId!);
     } catch (error) {
@@ -109,7 +100,6 @@ export default function CartPage() {
   const handleToggleWishlist = async (productId: string) => {
     try {
       handleToggleWishlist(productId);
-      // dispatch(toggleWishlist(user_id!, productId));
       toast.success("Wishlist updated");
     } catch (error) {
       toast.error("Failed to update wishlist");
@@ -119,8 +109,8 @@ export default function CartPage() {
 
   if (!userId) {
     return (
-      <div className="w-full py-4">
-        <div className="grid md:grid-cols-2 gap-8 max-w-7xl mx-auto px-4">
+      <div className="w-full py-4 px-2 sm:px-4">
+        <div className="grid md:grid-cols-2 gap-4 sm:gap-8 max-w-7xl mx-auto">
           <Card className="w-full">
             <CardHeader>
               <Skeleton className="h-8 w-[200px]" />
@@ -148,14 +138,14 @@ export default function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="w-full h-[calc(100vh-200px)] flex items-center justify-center">
-        <div className="flex flex-col items-center justify-center space-y-6 text-center">
+      <div className="w-full min-h-[calc(100vh-200px)] flex items-center justify-center p-4">
+        <div className="flex flex-col items-center justify-center space-y-6 text-center max-w-md">
           <ShoppingCart className="h-16 w-16 text-muted-foreground" />
           <h2 className="text-2xl font-bold">Your cart is empty</h2>
           <p className="text-muted-foreground">
             Looks like you haven't added any items to your cart yet.
           </p>
-          <Link href="/products">
+          <Link href="/">
             <Button size="lg" className="gap-2">
               <ShoppingCart className="h-4 w-4" />
               Start Shopping
@@ -167,8 +157,8 @@ export default function CartPage() {
   }
 
   return (
-    <div className="w-full py-4">
-      <div className="grid md:grid-cols-2 gap-8 max-w-7xl mx-auto px-4">
+    <div className="w-full py-4 px-2 sm:px-4">
+      <div className="grid lg:grid-cols-[1fr_400px] gap-4 sm:gap-8 max-w-7xl mx-auto">
         <Card className="w-full">
           <CardHeader>
             <h1 className="text-2xl font-bold">Your Cart</h1>
@@ -183,51 +173,61 @@ export default function CartPage() {
               const itemTotal = (product?.price || 0) * item.quantity;
 
               return (
-                <div key={item.id} className="space-y-4">
-                  <div className="flex items-center gap-6 p-6 border rounded-xl bg-card hover:bg-accent/50 transition-colors">
-                    <div className="relative w-28 h-28 flex-shrink-0">
+                <div key={item.id} className="space-y-2">
+                  <div className="flex items-start gap-3 p-2 sm:p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors shadow-sm">
+                    {/* Image on left */}
+                    <div className="relative w-[25%] h-full flex-shrink-0">
                       <img
                         src={product?.image_url}
                         alt={product?.name}
-                        className="object-cover rounded-lg w-full h-full shadow-sm"
+                        className="object-cover rounded-md w-full h-full shadow-sm"
                       />
                     </div>
 
-                    <div className="flex-1 space-y-3">
-                      <div>
-                        <h3 className="font-semibold text-lg line-clamp-2">
+                    {/* Content on right */}
+                    <div className="flex-1 flex justify-between">
+                      <div className="flex-1 flex flex-col gap-1 sm:gap-2">
+                        {/* Name */}
+                        <h3 className="font-semibold text-sm sm:text-base line-clamp-2">
                           {product?.name}
                         </h3>
-                        <p className="text-muted-foreground text-sm">
+
+                        {/* Price */}
+                        <p className="text-muted-foreground text-xs sm:text-sm">
                           ${product?.price?.toFixed(2)}
                         </p>
+
+                        {/* Quantity Selector */}
+                        <QuantitySelector
+                          quantity={item.quantity}
+                          onIncrease={() =>
+                            handleQuantityChange(item.id, item.quantity + 1)
+                          }
+                          onDecrease={() =>
+                            handleQuantityChange(item.id, item.quantity - 1)
+                          }
+                          min={1}
+                          max={99}
+                        />
                       </div>
 
-                      <QuantitySelector
-                        quantity={item.quantity}
-                        onIncrease={() =>
-                          handleQuantityChange(item.id, item.quantity + 1)
-                        }
-                        onDecrease={() =>
-                          handleQuantityChange(item.id, item.quantity - 1)
-                        }
-                        min={1}
-                        max={99}
-                      />
-                    </div>
-
-                    <div className="flex flex-col items-end gap-3">
-                      <p className="font-semibold text-lg">
-                        ${itemTotal.toFixed(2)}
-                      </p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveItem(item.id)}
-                        className="hover:bg-destructive/10 cursor-pointer"
-                      >
-                        <Trash className="h-4 w-4 text-destructive" />
-                      </Button>
+                      {/* Total Price and Remove Button */}
+                      <div className="flex flex-col text-right justify-between">
+                        <p className="font-semibold text-xl px-2 sm:text-lg text-primary">
+                          ${itemTotal.toFixed(2)}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveItem(item.id)}
+                          className="hover:bg-destructive/10 cursor-pointer px-2 py-1 flex items-center gap-1"
+                        >
+                          <Trash className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
+                          <span className="text-destructive text-xs sm:text-sm">
+                            Remove from Cart
+                          </span>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -236,7 +236,7 @@ export default function CartPage() {
           </CardContent>
         </Card>
 
-        <Card className="w-full max-w-md">
+        <Card className="w-full h-fit sticky top-4">
           <CardHeader>
             <h2 className="text-xl font-bold">Order Summary</h2>
           </CardHeader>

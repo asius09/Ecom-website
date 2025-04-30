@@ -5,45 +5,46 @@ import { Heart } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
 import { useEffect } from "react";
 import { setupWishlistRealTime } from "@/service/realTime";
-import { fetchWishlistProducts } from "@/app/api/products/action";
+import { fetchWishlistProducts } from "@/app/api/products/users/wishlist/action";
 import { setWishlist } from "@/lib/store/slices/wishlistSlice";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WishlistPage() {
-  const { slug } = useParams();
+  const { slug: userId } = useParams();
   const dispatch = useAppDispatch();
-  const { id: userId } = useAppSelector((state) => state.user);
   const { items: wishlistItems } = useAppSelector((state) => state.wishlist);
   const { products } = useAppSelector((state) => state.products);
+  // Ensure userId is a string
+  const userIdString = Array.isArray(userId) ? userId[0] : userId;
 
   // Filter products that are in the wishlist
   const wishlistProducts = products.filter((product) =>
-    wishlistItems.some(
-      (item) => item.product_id === product.id && item.user_id === userId
-    )
+    wishlistItems.some((items) => items.product_id === product.id)
   );
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userIdString) return;
+
     const fetchWishlist = async () => {
       try {
-        const data = await fetchWishlistProducts(userId);
+        const data = await fetchWishlistProducts(userIdString);
         dispatch(setWishlist(data));
       } catch (error) {
-        console.log(`Failed to fetch Wishlist Products: ${error}`);
+        throw new Error(`Failed to fetch Wishlist Products: ${error}`);
       }
     };
+
     fetchWishlist();
 
-    //realtime setup
-    const cleanupPromise = setupWishlistRealTime(userId, dispatch);
+    // Realtime setup
+    const cleanupPromise = setupWishlistRealTime(userIdString, dispatch);
 
     return () => {
       cleanupPromise.then((cleanup) => cleanup());
     };
-  }, [userId, dispatch]);
+  }, [userIdString, dispatch]);
 
-  if (!userId) {
+  if (!userIdString) {
     return (
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Your Wishlist</h1>

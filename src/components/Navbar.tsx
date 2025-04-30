@@ -48,6 +48,13 @@ export function Navbar() {
       icon: <User className="h-5 w-5" />,
       active: pathname.startsWith("/account"),
     },
+    {
+      type: "route",
+      href: `/wishlist/${userId}`,
+      label: "Wishlist",
+      icon: <Heart className="h-5 w-5" />,
+      active: pathname.startsWith("/wishlist"),
+    },
     ...(isAdmin
       ? [
           {
@@ -146,7 +153,7 @@ export function Navbar() {
           <Link
             key="logo-link"
             href="/"
-            className="pl极2 md:pl-0 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            className="pl-3 md:pl-0 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
           >
             MyShop
           </Link>

@@ -11,7 +11,7 @@ import {
   fetchCartProducts,
   fetchWishlistProducts,
   getAllProducts,
-} from "../app/api/products/action";
+} from "../app/api/products/users/action";
 
 export const useRealTimeFetchData = () => {
   const dispatch = useAppDispatch();

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ProductManagement from "@/components/admin/ProductManagement";
-import { getAllProducts } from "@/app/api/products/action";
+import { getAllProducts } from "@/app/api/products/users/action";
 import { Product } from "@/types/product";
 import { validAdmin } from "@/app/api/auth/action";
 

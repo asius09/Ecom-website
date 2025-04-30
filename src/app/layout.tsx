@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { ProductsLoader } from "@/components/product/ProductLoader";
 import SupabaseProvider from "@/context/SupabaseProvider";
 import { StoreProvider } from "./StoreProvider";
 import { Toaster } from "sonner";
@@ -36,6 +37,7 @@ export default function RootLayout({
           >
             <StoreProvider>
               <Navbar />
+              <ProductsLoader />
               {children}
             </StoreProvider>
             <Toaster position="top-center" richColors />

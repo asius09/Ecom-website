@@ -4,8 +4,7 @@ import { AppDispatch } from "@/lib/store/store";
 import {
   addToCart,
   removeFromCart,
-  updateCartQuantity,
-} from "@/app/api/products/action";
+} from "@/app/api/products/users/cart/action";
 import {
   optimisticUpdateStart,
   optimisticUpdateEnd,

@@ -18,7 +18,6 @@ import { useSupabase } from "@/context/SupabaseProvider";
 import { LogOutBtn } from "./auth/LogOutBtn";
 import { useAppSelector } from "@/lib/hooks";
 
-
 interface MenuItem {
   type: string;
   href?: string;
@@ -45,8 +44,11 @@ export function Navbar() {
     // Add a small delay to ensure Redux state is hydrated
     const timer = setTimeout(() => {
       setIsHydrated(true);
-    }, 100);
+    }, 300);
     return () => clearTimeout(timer);
+    if (!userId || !isAdmin) {
+      window.location.reload();
+    }
   }, []);
 
   const mobileMenu: MenuItem[] = [

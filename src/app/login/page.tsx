@@ -51,6 +51,7 @@ export default function LoginPage() {
         dispatch(setUser(userData));
         toast.success("Login successful!");
         router.push("/");
+        router.refresh();
       } else {
         throw new Error("Login failed");
       }

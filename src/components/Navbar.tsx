@@ -9,7 +9,6 @@ import {
   Menu,
   User,
   Heart,
-  Truck,
   X,
   LayoutDashboard,
 } from "lucide-react";
@@ -18,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { useSupabase } from "@/context/SupabaseProvider";
 import { LogOutBtn } from "./auth/LogOutBtn";
 import { useAppSelector } from "@/lib/hooks";
+
 
 interface MenuItem {
   type: string;
@@ -32,6 +32,7 @@ interface MenuItem {
 export function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const { user, isLoading } = useSupabase();
 
@@ -39,6 +40,14 @@ export function Navbar() {
     (state) => state.user
   );
   const { itemCount: cartItems } = useAppSelector((state) => state.cart);
+
+  useEffect(() => {
+    // Add a small delay to ensure Redux state is hydrated
+    const timer = setTimeout(() => {
+      setIsHydrated(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const mobileMenu: MenuItem[] = [
     {
@@ -124,11 +133,11 @@ export function Navbar() {
 
   if (pathname === "/login" || pathname === "/signup") return null;
 
-  if (isLoading) {
+  if (isLoading || !isHydrated) {
     return (
-      <header className="border-b sticky top-0 z极50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between mx-auto">
-          <div className="flex items-center gap极6">
+          <div className="flex items-center gap-6">
             <Link
               key="logo-link"
               href="/"

@@ -36,8 +36,8 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <StoreProvider>
-              <Navbar />
               <ProductsLoader />
+              <Navbar />
               {children}
             </StoreProvider>
             <Toaster position="top-center" richColors />

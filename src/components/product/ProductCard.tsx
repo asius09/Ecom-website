@@ -26,7 +26,9 @@ export function ProductCard({
     {
       title: "Add to Cart",
       icon: <ShoppingCart className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />,
-      onClick: async () => {
+      onClick: async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         try {
           const success = await handleAddToCart(id, userId!);
         } catch (error) {
@@ -37,7 +39,9 @@ export function ProductCard({
     },
     {
       title: "Buy Now",
-      onClick: async () => {
+      onClick: async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         try {
           const success = await handleAddToCart(id, userId!);
           if (success) {
@@ -53,7 +57,7 @@ export function ProductCard({
 
   return (
     <div className="bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow w-full max-w-[240px] min-w-[140px] sm:min-w-[160px] md:max-w-[280px] flex-1">
-      <Link href={`/product/${id}`}>
+      <Link href={`/product/${id}`} className="block">
         {image_url && (
           <div className="relative aspect-[4/3]">
             <img
@@ -61,10 +65,18 @@ export function ProductCard({
               alt={name}
               className="w-full h-full object-cover"
             />
-            <WishlistButton
-              productId={id}
-              className="absolute top-2 right-2 bg-background/50 backdrop-blur-sm rounded-full p-1 hover:bg-background/70 transition-colors"
-            />
+            <div
+              className="absolute top-2 right-2"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              <WishlistButton
+                productId={id}
+                className="bg-background/50 backdrop-blur-sm rounded-full p-1 hover:bg-background/70 transition-colors"
+              />
+            </div>
           </div>
         )}
         <div className="p-3 flex flex-col w-full">
@@ -91,21 +103,21 @@ export function ProductCard({
               ${price.toFixed(2)}
             </span>
           </div>
-          <div className="w-full flex flex-row gap-1 sm:gap-2">
-            {cardActionBtns.map((btn, index) => (
-              <Button
-                key={index}
-                variant={btn.variant}
-                className="w-1/2 cursor-pointer h-8 text-xs px-2 sm:px-3 whitespace-nowrap overflow-hidden text-ellipsis flex items-center gap-0.5"
-                onClick={btn.onClick}
-              >
-                {btn.icon && btn.icon}
-                {btn.title}
-              </Button>
-            ))}
-          </div>
         </div>
       </Link>
+      <div className="w-full flex flex-row gap-1 sm:gap-2 px-3 pb-3">
+        {cardActionBtns.map((btn, index) => (
+          <Button
+            key={index}
+            variant={btn.variant}
+            className="w-1/2 cursor-pointer h-8 text-xs px-2 sm:px-3 whitespace-nowrap overflow-hidden text-ellipsis flex items-center gap-0.5"
+            onClick={btn.onClick}
+          >
+            {btn.icon && btn.icon}
+            {btn.title}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 }

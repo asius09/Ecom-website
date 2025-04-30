@@ -79,6 +79,31 @@ export async function signout() {
   }
 }
 
+export async function getCurrentUser(): Promise<User | null> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return null;
+    }
+
+    const { data: userData, error } = await supabase
+      .from("user")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (error) throw error;
+    return userData;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
+}
+
 export async function getAllUsers(isAdmin: boolean): Promise<User[]> {
   try {
     const supabase = await createClient();

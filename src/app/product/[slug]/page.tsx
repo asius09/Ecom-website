@@ -22,22 +22,28 @@ export default function ProductDetailsPage() {
     const getProduct = async () => {
       try {
         setLoading(true);
+        setError(null);
 
-        if (products.length === 0) {
-          setError("No products available");
-          return;
-        }
-
+        // First try to find product in Redux store
         const detailProduct = products.find(
           (product) => product.id === productId
         );
 
-        if (!detailProduct) {
+        if (detailProduct) {
+          setProduct(detailProduct);
+          return;
+        }
+
+        // If not found in Redux, fetch from API
+        const res = await fetch(`/api/products/${productId}`);
+        const data = await res.json();
+
+        if (!data || !data.id) {
           setError("Product not found");
           return;
         }
 
-        setProduct(detailProduct);
+        setProduct(data);
       } catch (error) {
         setError("Failed to fetch product details");
       } finally {
@@ -69,9 +75,11 @@ export default function ProductDetailsPage() {
 
   if (error) {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-7xl mx-auto bg-red-50 border border-red-200 text-red-700 px-6 py-5 rounded-lg">
-          Error: {error}
+      <div className="w-full min-h-screen p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-5 rounded-lg">
+            Error: {error}
+          </div>
         </div>
       </div>
     );
@@ -79,9 +87,11 @@ export default function ProductDetailsPage() {
 
   if (!product) {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-7xl mx-auto bg-yellow-50 border border-yellow-200 text-yellow-700 px-6 py-5 rounded-lg">
-          Product not found
+      <div className="w-full min-h-screen p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            Product not found
+          </div>
         </div>
       </div>
     );

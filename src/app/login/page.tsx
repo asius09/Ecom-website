@@ -15,9 +15,13 @@ import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { login } from "../api/auth/action";
 import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/lib/hooks";
+import { setUser } from "@/lib/store/slices/userSlice";
+import { User } from "@/types/user";
 
 export default function LoginPage() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -31,8 +35,20 @@ export default function LoginPage() {
       const formData = new FormData();
       formData.append("email", email);
       formData.append("password", password);
-      const success = await login(formData);
+      const {
+        success,
+        data: { user },
+      } = await login(formData);
       if (success) {
+        const userData: User = {
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata?.name || "",
+          is_admin: user.user_metadata?.is_admin || false,
+          created_at: user.created_at,
+        };
+        console.log("Login store Data", userData);
+        dispatch(setUser(userData));
         toast.success("Login successful!");
         router.push("/");
       } else {

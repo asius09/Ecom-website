@@ -1,5 +1,5 @@
 "use client";
-// Import necessary components and utilities
+
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { Footer } from "@/components/Footer";
 import Image from "next/image";
@@ -27,8 +27,8 @@ export default function Home() {
         setLoading(false);
       }
     };
-
     fetchProducts();
+    
   }, []);
 
   // Loading state UI with skeleton components

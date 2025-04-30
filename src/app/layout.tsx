@@ -4,9 +4,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import SupabaseProvider from "@/context/SupabaseProvider";
-import StoreProvider from "./StoreProvider";
+import { StoreProvider } from "./StoreProvider";
 import { Toaster } from "sonner";
-import { ClientProviders } from "@/app/ClientProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -36,10 +35,8 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <StoreProvider>
-              <ClientProviders>
-                <Navbar />
-                {children}
-              </ClientProviders>
+              <Navbar />
+              {children}
             </StoreProvider>
             <Toaster position="top-center" richColors />
           </ThemeProvider>

@@ -12,36 +12,46 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Trash2 } from "lucide-react";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "user" | "admin";
-}
-
-const mockUsers: User[] = [
-  { id: "1", name: "Alice Johnson", email: "alice@example.com", role: "user" },
-  { id: "2", name: "Bob Smith", email: "bob@example.com", role: "admin" },
-  {
-    id: "3",
-    name: "Charlie Brown",
-    email: "charlie@example.com",
-    role: "user",
-  },
-  { id: "4", name: "David Wilson", email: "david@example.com", role: "user" },
-  { id: "5", name: "Eve Davis", email: "eve@example.com", role: "admin" },
-];
+import { User } from "@/types/user";
+import { deleteUser } from "@/app/api/user/action";
+import { getAllUsers } from "@/app/api/auth/action";
+import { toast } from "sonner";
+import { useAppSelector } from "@/lib/hooks";
 
 export default function UserManagement() {
+  const { id: userId, is_admin } = useAppSelector((state) => state.user);
+  const isAdmin = is_admin || false; // Ensure isAdmin is always a boolean
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setUsers(mockUsers); // Fetch from Supabase in production
-  }, []);
+    const getUsers = async () => {
+      try {
+        const data = await getAllUsers(isAdmin);
+        setUsers(data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleDelete = (id: string) => {
-    setUsers((prev) => prev.filter((user) => user.id !== id));
+    getUsers();
+  }, [isAdmin]);
+
+  const handleDelete = async (id: string) => {
+    try {
+      const status = await deleteUser(id);
+      if (status) {
+        toast.success("User deleted successfully");
+        // Refresh user list after deletion
+        const updatedUsers = await getAllUsers(isAdmin);
+        setUsers(updatedUsers);
+      }
+    } catch (error) {
+      toast.error("Failed to delete user");
+      console.error("Error deleting user:", error);
+    }
   };
 
   return (
@@ -64,7 +74,7 @@ export default function UserManagement() {
               <TableRow key={user.id}>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell>{user.is_admin ? "Admin" : "User"}</TableCell>
                 <TableCell className="text-right">
                   <Button
                     variant="destructive"

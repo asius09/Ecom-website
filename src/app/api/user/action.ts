@@ -63,3 +63,29 @@ export const updateUser = async (
     return false;
   }
 };
+
+export const fetchUsers = async (): Promise<User[]> => {
+  try {
+    const { data, error } = await supabase.from("user").select("*");
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return [];
+  }
+};
+export const deleteUser = async (userId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase.from("user").delete().eq("id", userId);
+
+    if (error) {
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return false;
+  }
+};

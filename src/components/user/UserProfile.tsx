@@ -29,11 +29,12 @@ export function UserProfile() {
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
+    //TODO
   };
 
   const handleSave = () => {
     setIsEditing(false);
-    // Save logic here
+    // TODO
   };
 
   return (

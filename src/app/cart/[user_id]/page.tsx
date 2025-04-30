@@ -12,7 +12,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Heart, Trash, ShoppingCart } from "lucide-react";
+import { Trash, ShoppingCart } from "lucide-react";
 import { QuantitySelector } from "@/components/cart/QuantitySelector";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
 import {
@@ -20,14 +20,9 @@ import {
   removeFromCart,
   setCartItems,
 } from "@/lib/store/slices/cartSlice";
-import { toggleWishlist } from "@/lib/store/slices/wishlistSlice";
 import { supabase } from "@/utils/supabase/client";
 import { setupCartRealtime } from "@/service/realTime";
-import {
-  handleRemoveFromCart,
-  handleAddToCart,
-  handleUpdateCartQuantity,
-} from "@/utils/product/cart";
+import { handleRemoveFromCart } from "@/utils/product/cart";
 import Link from "next/link";
 
 export default function CartPage() {

@@ -4,7 +4,6 @@ import { UserSettings } from "@/components/user/UserSettings";
 import { UserProfile } from "@/components/user/UserProfile";
 import { UserPayment } from "@/components/user/UserPayment";
 import { UserAddress } from "@/components/user/UserAddress";
-import { Sidebar } from "@/components/ui/sidebar";
 import { useState } from "react";
 import { User, CreditCard, MapPin, Settings } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -56,7 +55,9 @@ export default function AccountPage() {
   return (
     <div className="container mx-auto flex flex-col md:flex-row gap-8 p-4 min-h-[calc(100vh-6rem)]">
       {/* Sidebar */}
-      <div className={`w-full ${isMobile ? 'sticky top-16 bg-background z-40' : ''} md:w-64`}>
+      <div
+        className={`w-full ${isMobile ? "sticky top-16 bg-background z-40" : ""} md:w-64`}
+      >
         <div className="space-y-1 sticky top-20">
           {sidebarItems.map((item) => (
             <button
@@ -77,8 +78,17 @@ export default function AccountPage() {
 
       {/* Main Content */}
       <div className="flex-1">
-        <div className="bg-card rounded-lg shadow-sm p-6">
-          {activeComponent}
+        <div className="bg-card rounded-lg shadow-sm p-6 min-h-[600px]">
+          {isLoading ? (
+            <div className="space-y-6">
+              <Skeleton className="h-8 w-1/3" />
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-[400px] w-full mt-6" />
+            </div>
+          ) : (
+            activeComponent
+          )}
         </div>
       </div>
     </div>

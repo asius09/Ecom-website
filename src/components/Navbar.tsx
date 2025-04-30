@@ -4,12 +4,30 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ModeToggle";
 import { usePathname } from "next/navigation";
-import { ShoppingCart, Menu, User, Heart, Truck, X } from "lucide-react";
-import { useState } from "react";
+import {
+  ShoppingCart,
+  Menu,
+  User,
+  Heart,
+  Truck,
+  X,
+  LayoutDashboard,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useSupabase } from "@/context/SupabaseProvider";
 import { LogOutBtn } from "./auth/LogOutBtn";
 import { useAppSelector } from "@/lib/hooks";
+
+interface MenuItem {
+  type: string;
+  href?: string;
+  label?: string;
+  icon?: React.ReactNode;
+  active?: boolean;
+  component?: React.ReactNode;
+  className?: string;
+}
 
 export function Navbar() {
   const pathname = usePathname();
@@ -17,24 +35,30 @@ export function Navbar() {
 
   const { user, isLoading } = useSupabase();
 
-  const { id: user_id } = useAppSelector((state) => state.user);
+  const { id: userId, is_admin: isAdmin } = useAppSelector(
+    (state) => state.user
+  );
   const { itemCount: cartItems } = useAppSelector((state) => state.cart);
 
-  const mobileMenu = [
+  const mobileMenu: MenuItem[] = [
     {
       type: "route",
-      href: `/account/${user_id}`,
+      href: `/account/${userId}`,
       label: "Account",
       icon: <User className="h-5 w-5" />,
       active: pathname.startsWith("/account"),
     },
-    {
-      type: "route",
-      href: "/orders",
-      label: "Orders",
-      icon: <Truck className="h-5 w-5" />,
-      active: pathname.startsWith("/orders"),
-    },
+    ...(isAdmin
+      ? [
+          {
+            type: "route",
+            href: "/admin",
+            label: "Dashboard",
+            icon: <LayoutDashboard className="h-5 w-5" />,
+            active: pathname.startsWith("/admin"),
+          },
+        ]
+      : []),
     {
       type: "button",
       label: "Theme",
@@ -46,23 +70,38 @@ export function Navbar() {
     },
   ];
 
-  const rightRoutes = [
+  const rightRoutes: MenuItem[] = [
     {
-      href: `/account/${user_id}`,
+      type: "route",
+      href: `/account/${userId}`,
       label: "Account",
       icon: <User className="h-5 w-5" />,
       active: pathname.startsWith("/account"),
       className: "hidden md:flex",
     },
     {
-      href: `/wishlist/${user_id}`,
+      type: "route",
+      href: `/wishlist/${userId}`,
       label: "Wishlist",
       icon: <Heart className="h-5 w-5" />,
       active: pathname.startsWith("/wishlist"),
       className: "hidden md:flex",
     },
+    ...(isAdmin
+      ? [
+          {
+            type: "route",
+            href: "/admin",
+            label: "Dashboard",
+            icon: <LayoutDashboard className="h-5 w-5" />,
+            active: pathname.startsWith("/admin"),
+            className: "hidden md:flex",
+          },
+        ]
+      : []),
     {
-      href: `/cart/${user_id}`,
+      type: "route",
+      href: `/cart/${userId}`,
       label: "Cart",
       icon: (
         <>
@@ -80,9 +119,9 @@ export function Navbar() {
 
   if (isLoading) {
     return (
-      <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="border-b sticky top-0 z极50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between mx-auto">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap极6">
             <Link
               key="logo-link"
               href="/"
@@ -114,11 +153,11 @@ export function Navbar() {
         </div>
 
         {/* Search Bar */}
-        <div className="flex-1 max极w-md mx-4">
+        <div className="flex-1 max-w-md mx-4">
           <Input
             type="search"
             placeholder="Search products..."
-            className="w-full"
+            className="w-full max-h-10"
           />
         </div>
 
@@ -130,10 +169,10 @@ export function Navbar() {
                 key={route.href}
                 variant="ghost"
                 size="icon"
-                className={`relative ${route.className}`}
+                className={`relative ${route.className || ""}`}
                 asChild
               >
-                <Link href={route.href}>{route.icon}</Link>
+                <Link href={route.href!}>{route.icon}</Link>
               </Button>
             ))
           ) : (
@@ -179,26 +218,24 @@ export function Navbar() {
                 </div>
                 <nav className="flex flex-col py-4 space-y-2">
                   {mobileMenu.map((item) => {
-                    switch (item.type) {
-                      case "button":
-                        return (
-                          <div key={item.label} className="p-4">
-                            {item.component}
-                          </div>
-                        );
-                      default:
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href!}
-                            className="text-sm font-medium transition-colors hover:bg-accent/50 p-4 text-foreground flex items-center gap-2"
-                            onClick={() => setMobileMenuOpen(false)}
-                          >
-                            {item.icon}
-                            {item.label}
-                          </Link>
-                        );
+                    if (item.type === "button") {
+                      return (
+                        <div key={item.label || "theme-button"} className="p-4">
+                          {item.component}
+                        </div>
+                      );
                     }
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href!}
+                        className="text-sm font-medium transition-colors hover:bg-accent/50 p-4 text-foreground flex items-center gap-2"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.icon}
+                        {item.label}
+                      </Link>
+                    );
                   })}
                 </nav>
               </div>

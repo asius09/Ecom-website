@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,53 +12,37 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ProductComposer } from "./ProductComposer";
+import { Product } from "@/types/product";
+import { Pencil, Trash2 } from "lucide-react";
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  status: "in stock" | "low stock" | "out of stock";
-  performance: "high" | "medium" | "low";
+interface ProductManagementProps {
+  products: Product[];
+  loading: boolean;
 }
 
-const mockProducts: Product[] = [
-  {
-    id: "1",
-    name: "iPhone 15 Pro",
-    price: 999,
-    stock: 50,
-    status: "in stock",
-    performance: "high",
-  },
-  {
-    id: "2",
-    name: "MacBook Air M2",
-    price: 1199,
-    stock: 10,
-    status: "low stock",
-    performance: "medium",
-  },
-  {
-    id: "3",
-    name: "AirPods Pro",
-    price: 249,
-    stock: 0,
-    status: "out of stock",
-    performance: "low",
-  },
-];
+export default function ProductManagement({
+  products,
+  loading,
+}: ProductManagementProps) {
+  const getStockStatus = (quantity: number) => {
+    if (quantity > 10) return "In Stock";
+    if (quantity > 0) return "Low Stock";
+    return "Out of Stock";
+  };
 
-export default function ProductManagement() {
-  const [products, setProducts] = useState<Product[]>(mockProducts);
+  const getPerformance = (price: number) => {
+    if (price > 1000) return "High";
+    if (price > 500) return "Medium";
+    return "Low";
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "in stock":
+      case "In Stock":
         return <Badge className="bg-green-500 text-white">In Stock</Badge>;
-      case "low stock":
+      case "Low Stock":
         return <Badge className="bg-yellow-500 text-white">Low Stock</Badge>;
-      case "out of stock":
+      case "Out of Stock":
         return <Badge variant="destructive">Out of Stock</Badge>;
       default:
         return <Badge>Unknown</Badge>;
@@ -68,11 +51,11 @@ export default function ProductManagement() {
 
   const getPerformanceBadge = (performance: string) => {
     switch (performance) {
-      case "high":
+      case "High":
         return <Badge className="bg-green-500 text-white">High</Badge>;
-      case "medium":
+      case "Medium":
         return <Badge className="bg-yellow-500 text-white">Medium</Badge>;
-      case "low":
+      case "Low":
         return <Badge variant="destructive">Low</Badge>;
       default:
         return <Badge>Unknown</Badge>;
@@ -106,18 +89,32 @@ export default function ProductManagement() {
                 <TableRow key={product.id}>
                   <TableCell>{product.name}</TableCell>
                   <TableCell>${product.price.toFixed(2)}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
-                  <TableCell>{getStatusBadge(product.status)}</TableCell>
+                  <TableCell>{product.stock_quantity}</TableCell>
                   <TableCell>
-                    {getPerformanceBadge(product.performance)}
+                    {getStatusBadge(getStockStatus(product.stock_quantity))}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
-                      Edit
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      Delete
-                    </Button>
+                    {getPerformanceBadge(getPerformance(product.price))}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="gap-1 cursor-pointer"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

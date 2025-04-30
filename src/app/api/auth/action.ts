@@ -2,8 +2,11 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createUser } from "../user/action";
+import { User } from "@/types/user";
 
-export async function login(formData: FormData): Promise<boolean> {
+export async function login(
+  formData: FormData
+): Promise<{ success: boolean; data?: any }> {
   try {
     const supabase = await createClient();
 
@@ -12,21 +15,17 @@ export async function login(formData: FormData): Promise<boolean> {
       password: formData.get("password") as string,
     };
 
-    console.log("Attempting login for:", data.email);
-
-    const { error } = await supabase.auth.signInWithPassword(data);
+    const { data: authData, error } =
+      await supabase.auth.signInWithPassword(data);
 
     if (error) {
-      console.error("Login error:", error.message);
       throw error;
     }
 
-    console.log("Login successful for:", data.email);
     revalidatePath("/", "layout");
-    return true; // Return true instead of redirecting
+    return { success: true, data: authData };
   } catch (error) {
-    console.error("Login failed:", error);
-    throw error;
+    return { success: false, data: error };
   }
 }
 
@@ -39,8 +38,6 @@ export async function signup(formData: FormData): Promise<boolean> {
       name: formData.get("name") as string,
     };
 
-    console.log("Attempting signup for:", data.email);
-
     const { data: signupData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -52,7 +49,6 @@ export async function signup(formData: FormData): Promise<boolean> {
     });
 
     if (error) {
-      console.error("Signup error:", error.message);
       throw error;
     }
 
@@ -61,14 +57,13 @@ export async function signup(formData: FormData): Promise<boolean> {
         id: signupData.user.id,
         email: signupData.user.email!,
         name: data.name,
+        is_admin: false,
       });
     }
 
-    console.log("Signup successful for:", data.email);
     revalidatePath("/", "layout");
-    return true; // Return true instead of redirecting
+    return true;
   } catch (error) {
-    console.error("Signup failed:", error);
     throw error;
   }
 }
@@ -76,18 +71,15 @@ export async function signup(formData: FormData): Promise<boolean> {
 export async function signout() {
   try {
     const supabase = await createClient();
-    console.log("Attempting signout");
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
-    console.log("Signout successful");
-    return true; // Return true instead of redirecting
+    return true;
   } catch (error) {
-    console.log("Signout Failed : ", error);
     return false;
   }
 }
 
-export async function validAdmin(): Promise<boolean> {
+export async function getAllUsers(isAdmin: boolean): Promise<User[]> {
   try {
     const supabase = await createClient();
     const {
@@ -95,11 +87,10 @@ export async function validAdmin(): Promise<boolean> {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      console.log("No user found, redirecting");
-      return false;
+      throw new Error("User not authenticated");
     }
 
-    console.log("Checking admin status for user:", user.id);
+    // Check if user is admin
     const { data: userData } = await supabase
       .from("user")
       .select("is_admin")
@@ -107,14 +98,23 @@ export async function validAdmin(): Promise<boolean> {
       .single();
 
     if (userData?.is_admin) {
-      console.log("User is admin");
-      return true;
+      const { data: users, error } = await supabase.from("user").select("*");
+
+      if (error) throw error;
+      return users || [];
     }
 
-    console.log("User is not admin");
-    return false;
+    // Regular users can only get their own data
+    const { data: singleUser, error } = await supabase
+      .from("user")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    if (error) throw error;
+    return singleUser ? [singleUser] : [];
   } catch (error) {
-    console.error("Admin validation failed:", error);
-    return false;
+    console.error("Error getting users:", error);
+    return [];
   }
 }

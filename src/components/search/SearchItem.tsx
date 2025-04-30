@@ -31,11 +31,9 @@ export function SearchItem({
   return (
     <div className="w-full flex items-center gap-8 p-8 border rounded-lg hover:shadow-sm transition-shadow">
       <div className="relative w-48 h-48 flex-shrink-0 rounded-lg overflow-hidden shadow-md">
-        {isImageLoading && (
-          <Skeleton className="absolute inset-0 rounded-lg" />
-        )}
+        {isImageLoading && <Skeleton className="absolute inset-0 rounded-lg" />}
         <Image
-          src={product.featuredAsset?.preview || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"}
+          src={product.image_url || "/placeholder-image.jpg"}
           alt={product.name}
           fill
           className={`object-cover transition-opacity duration-300 ${
@@ -80,7 +78,7 @@ export function SearchItem({
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => console.log('Buy Now:', product)}
+            onClick={() => console.log("Buy Now:", product)}
             className="gap-2 h-10"
           >
             Buy Now

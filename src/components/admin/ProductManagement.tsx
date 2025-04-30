@@ -17,13 +17,9 @@ import { Pencil, Trash2 } from "lucide-react";
 
 interface ProductManagementProps {
   products: Product[];
-  loading: boolean;
 }
 
-export default function ProductManagement({
-  products,
-  loading,
-}: ProductManagementProps) {
+export function ProductManagement({ products }: ProductManagementProps) {
   const getStockStatus = (quantity: number) => {
     if (quantity > 10) return "In Stock";
     if (quantity > 0) return "Low Stock";

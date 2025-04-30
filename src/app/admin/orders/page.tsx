@@ -1,6 +1,6 @@
 "use client";
 
-import OrderManagement from "@/components/admin/OrderManagement";
+import { OrderManagement } from "@/components/admin/OrderManagement";
 
 export default function OrderPage() {
   return (

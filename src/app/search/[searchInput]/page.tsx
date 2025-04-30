@@ -5,65 +5,35 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Product } from "@/types/product";
 
-// Example product data
-const exampleProducts: Product[] = [
-  {
-    id: "1",
-    name: "Wireless Headphones",
-    slug: "wireless-headphones",
-    description: "Noise-cancelling wireless headphones",
-    price: 199.99,
-    currencyCode: "USD",
-    featuredAsset: {
-      preview: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=3199&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-    }
-  },
-  {
-    id: "2",
-    name: "Smart Watch",
-    slug: "smart-watch",
-    description: "Fitness tracking smart watch",
-    price: 149.99,
-    currencyCode: "USD",
-    featuredAsset: {
-      preview: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-    }
-  }
-];
-
 export default function SearchPage() {
   const searchParams = useSearchParams();
-  const searchInput = searchParams.get('q') || '';
-  const [products, setProducts] = useState<Product[]>(exampleProducts);
+  const searchInput = searchParams.get("q") || "";
+  const [products, setProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState({
-    priceRange: [0, 1000] as [number, number]
+    priceRange: [0, 1000] as [number, number],
   });
 
   useEffect(() => {
-    // Simulate API call with example data
     const fetchProducts = async () => {
-      // Filter example products based on search input
-      const filteredProducts = exampleProducts.filter(product =>
-        product.name.toLowerCase().includes(searchInput.toLowerCase())
-      );
-      setProducts(filteredProducts);
+      // TODO: Implement actual API call to fetch products
+      const response = await fetch(`/api/search?q=${searchInput}`);
+      const data = await response.json();
+      setProducts(data.products);
     };
 
     fetchProducts();
   }, [searchInput, filters]);
 
-  const handleFilterChange = (newFilters: {
-    priceRange: [number, number];
-  }) => {
+  const handleFilterChange = (newFilters: { priceRange: [number, number] }) => {
     setFilters(newFilters);
   };
 
   const handleAddToCart = (product: Product) => {
-    console.log('Added to cart:', product);
+    console.log("Added to cart:", product);
   };
 
   const handleAddToWishlist = (product: Product) => {
-    console.log('Added to wishlist:', product);
+    console.log("Added to wishlist:", product);
   };
 
   return (

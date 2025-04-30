@@ -38,7 +38,7 @@ const sidebarLinks = [
   },
 ];
 
-export default function AdminSidebar() {
+export  function AdminSidebar() {
   const pathname = usePathname();
 
   return (

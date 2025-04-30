@@ -59,7 +59,7 @@ const mockOrders: Order[] = [
   },
 ];
 
-export default function OrderManagement() {
+export function OrderManagement() {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
 
   const getStatusBadge = (status: string) => {

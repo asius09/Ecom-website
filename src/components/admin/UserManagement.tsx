@@ -18,7 +18,7 @@ import { getAllUsers } from "@/app/api/auth/action";
 import { toast } from "sonner";
 import { useAppSelector } from "@/lib/hooks";
 
-export default function UserManagement() {
+export function UserManagement() {
   const { id: userId, is_admin } = useAppSelector((state) => state.user);
   const isAdmin = is_admin || false; // Ensure isAdmin is always a boolean
   const [users, setUsers] = useState<User[]>([]);

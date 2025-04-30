@@ -2,35 +2,72 @@
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { useParams } from "next/navigation";
 import { Heart } from "lucide-react";
-
-
-const wishlistProducts = [
-  {
-    id: "1",
-    name: "Wireless Headphones",
-    description:
-      "Noise-cancelling wireless headphones with 30-hour battery life",
-    price: 199.99,
-    imageUrl:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    rating: 4.7,
-    reviewCount: 235,
-  },
-  {
-    id: "2",
-    name: "Smart Watch",
-    description: "Fitness tracking smart watch with heart rate monitoring",
-    price: 149.99,
-    imageUrl:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=2899&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    rating: 4.5,
-    reviewCount: 189,
-  },
-];
+import { useAppSelector, useAppDispatch } from "@/lib/hooks";
+import { useEffect } from "react";
+import { setupWishlistRealTime } from "@/service/realTime";
+import { fetchWishlistProducts } from "@/app/api/products/action";
+import { setWishlist } from "@/lib/store/slices/wishlistSlice";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WishlistPage() {
   const { slug } = useParams();
+  const dispatch = useAppDispatch();
+  const { id: userId } = useAppSelector((state) => state.user);
+  const { items: wishlistItems } = useAppSelector((state) => state.wishlist);
+  const { products } = useAppSelector((state) => state.products);
 
+  // Filter products that are in the wishlist
+  const wishlistProducts = products.filter((product) =>
+    wishlistItems.some(
+      (item) => item.product_id === product.id && item.user_id === userId
+    )
+  );
+
+  useEffect(() => {
+    if (!userId) return;
+    const fetchWishlist = async () => {
+      try {
+        const data = await fetchWishlistProducts(userId);
+        dispatch(setWishlist(data));
+      } catch (error) {
+        console.log(`Failed to fetch Wishlist Products: ${error}`);
+      }
+    };
+    fetchWishlist();
+
+    //realtime setup
+    const cleanupPromise = setupWishlistRealTime(userId, dispatch);
+
+    return () => {
+      cleanupPromise.then((cleanup) => cleanup());
+    };
+  }, [userId, dispatch]);
+
+  if (!userId) {
+    return (
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Your Wishlist</h1>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-card rounded-lg shadow-sm overflow-hidden"
+            >
+              <Skeleton className="h-48 w-full" />
+              <div className="p-3 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="container mx-auto px-4 py-8">

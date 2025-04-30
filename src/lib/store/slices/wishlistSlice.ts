@@ -14,10 +14,32 @@ const wishlistSlice = createSlice({
   name: "wishlist",
   initialState,
   reducers: {
-    addToWishlist: (state, action: PayloadAction<WishlistItem[]>) => {
-      state.items = [...state.items, ...action.payload];
+    setWishlist: (state, action: PayloadAction<WishlistItem[]>) => {
+      state.items = action.payload;
     },
-    toggleWishlist: (state, action: PayloadAction<{ user_id: string; product_id: string }>) => {
+    addToWishlist: (state, action: PayloadAction<WishlistItem>) => {
+      const existingItem = state.items.find(
+        (item) => item.id === action.payload.id
+      );
+      if (!existingItem) {
+        state.items.push(action.payload);
+      }
+    },
+    removeFromWishlist: (
+      state,
+      action: PayloadAction<{ wishlistId: string }>
+    ) => {
+      const { wishlistId } = action.payload;
+      const existingItem = state.items.find((item) => item.id === wishlistId);
+
+      if (existingItem) {
+        state.items = state.items.filter((item) => item.id !== wishlistId);
+      }
+    },
+    toggleWishlist: (
+      state,
+      action: PayloadAction<{ user_id: string; product_id: string }>
+    ) => {
       const { user_id, product_id } = action.payload;
       const existingItem = state.items.find(
         (item) => item.user_id === user_id && item.product_id === product_id
@@ -25,7 +47,8 @@ const wishlistSlice = createSlice({
 
       if (existingItem) {
         state.items = state.items.filter(
-          (item) => !(item.user_id === user_id && item.product_id === product_id)
+          (item) =>
+            !(item.user_id === user_id && item.product_id === product_id)
         );
       } else {
         state.items.push({
@@ -38,5 +61,10 @@ const wishlistSlice = createSlice({
   },
 });
 
-export const { addToWishlist, toggleWishlist } = wishlistSlice.actions;
+export const {
+  setWishlist,
+  addToWishlist,
+  toggleWishlist,
+  removeFromWishlist,
+} = wishlistSlice.actions;
 export default wishlistSlice.reducer;

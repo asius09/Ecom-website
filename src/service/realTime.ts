@@ -1,12 +1,17 @@
 // services/cartRealtime.ts
 import { supabase } from "@/utils/supabase/client";
+import { AppDispatch } from "@/lib/store/store";
 import {
   addToCart,
   updateQuantity,
   removeFromCart,
 } from "@/lib/store/slices/cartSlice";
+import {
+  addToWishlist,
+  removeFromWishlist,
+} from "@/lib/store/slices/wishlistSlice";
 
-export const setupCartRealtime = (userId: string, dispatch: any) => {
+export const setupCartRealtime = (userId: string, dispatch: AppDispatch) => {
   const channel = supabase
     .channel("cart_realtime")
     .on(
@@ -50,4 +55,41 @@ export const setupCartRealtime = (userId: string, dispatch: any) => {
   return () => {
     supabase.removeChannel(channel);
   };
+};
+
+export const setupWishlistRealTime = async (
+  userId: string,
+  dispatch: AppDispatch
+) => {
+  const channel = supabase
+    .channel("wishlist_realtime")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "wishlist_items",
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        switch (payload.eventType) {
+          case "INSERT":
+            dispatch(
+              addToWishlist({
+                id: payload.new.id,
+                product_id: payload.new.product_id,
+                user_id: payload.new.product_id,
+              })
+            );
+            break;
+
+          case "DELETE":
+            dispatch(removeFromWishlist(payload.old.product_id));
+            break;
+        }
+      }
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
 };

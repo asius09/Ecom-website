@@ -1,117 +1,72 @@
 "use client";
+// Import necessary components and utilities
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { Footer } from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase/client";
-import { createUser } from "./api/user/action";
-
-const products = [
-  {
-    id: "1",
-    name: "Wireless Headphones",
-    description:
-      "Noise-cancelling wireless headphones with 30-hour battery life",
-    price: 199.99,
-    imageUrl:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    rating: 4.7,
-    reviewCount: 235,
-  },
-  {
-    id: "2",
-    name: "Smart Watch",
-    description: "Fitness tracking smart watch with heart rate monitoring",
-    price: 149.99,
-    imageUrl:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=2899&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    rating: 4.5,
-    reviewCount: 189,
-  },
-  {
-    id: "3",
-    name: "Bluetooth Speaker",
-    description: "Portable waterproof Bluetooth speaker with 20-hour playtime",
-    price: 79.99,
-    imageUrl:
-      "https://images.unsplash.com/photo-1543512214-318c7553f230?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    rating: 4.3,
-    reviewCount: 142,
-  },
-  {
-    id: "4",
-    name: "Gaming Keyboard",
-    description: "Mechanical RGB gaming keyboard with customizable keys",
-    price: 129.99,
-    imageUrl:
-      "https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?q=80&w=2864&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    rating: 4.8,
-    reviewCount: 312,
-  },
-];
-
-const categories = [
-  {
-    name: "Electronics",
-    href: "/categories/electronics",
-    image:
-      "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-  {
-    name: "Clothing",
-    href: "/categories/clothing",
-    image:
-      "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-  {
-    name: "Home & Kitchen",
-    href: "/categories/home-kitchen",
-    image:
-      "https://images.unsplash.com/photo-1616486029423-aaa4789e8c9a?q=80&w=2832&auto=format&fit=crop&ixlib=rb-4.0.3极ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-  {
-    name: "Sports & Outdoors",
-    href: "/categories/sports-outdoors",
-    image:
-      "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=3072&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  },
-];
+import { Product } from "@/types/product";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Home() {
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
-        if (error) {
-          throw new Error(`Error getting user: ${error.message}`);
-        }
+  // State management for products and loading status
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-        if (user) {
-          const createdUser = await createUser({
-            id: user.id,
-            email: user.email!,
-            name: user.user_metadata?.name || "",
-          });
-          if (!createdUser) {
-            throw new Error("Failed to create user");
-          }
-        }
+  // Fetch products from Supabase on component mount
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const { data, error } = await supabase.from("products").select("*");
+        if (error) throw error;
+        setProducts(data || []);
       } catch (error) {
-        console.error(
-          "Check user error:",
-          error instanceof Error ? error.message : "Unknown error"
-        );
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
       }
     };
-    checkUser();
+
+    fetchProducts();
   }, []);
+
+  // Loading state UI with skeleton components
+  if (loading) {
+    return (
+      <main className="container mx-auto px-4">
+        {/* Hero section skeleton */}
+        <div className="relative h-[400px] w-full mb-12 overflow-hidden">
+          <Skeleton className="absolute inset-0 w-full h-full" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <Skeleton className="h-12 w-96 mb-4" />
+            <Skeleton className="h-6 w-80 mb-8" />
+            <Skeleton className="h-12 w-48 rounded-full" />
+          </div>
+        </div>
+
+        {/* Products grid skeleton */}
+        <section>
+          <Skeleton className="h-10 w-64 mb-8" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="space-y-4">
+                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-6 w-1/2" />
+              </div>
+            ))}
+          </div>
+        </section>
+        <Footer />
+      </main>
+    );
+  }
+
+  // Main UI with actual content
   return (
     <main className="container mx-auto px-4">
-      {/* Hero Banner */}
+      {/* Hero section with background image and call-to-action */}
       <div className="relative h-[400px] w-full mb-12 overflow-hidden">
         <Image
           src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -135,38 +90,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Categories Section */}
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold mb-8">Shop by Category</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {categories.map((category) => (
-            <Link
-              key={category.href}
-              href={category.href}
-              className="group relative aspect-square rounded-lg overflow-hidden"
-            >
-              <Image
-                src={category.image}
-                alt={category.name}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform"
-              />
-              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                <h3 className="text-2xl font-bold text-white">
-                  {category.name}
-                </h3>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Featured Products Section */}
-      <section>
+      {/* Featured products section */}
+      <section className="pb-4">
         <h2 className="text-3xl font-bold mb-8">Featured Products</h2>
-        <ProductGrid products={products} />
+        <ProductGrid products={products} variant={"slider"} />
       </section>
-      <Footer></Footer>
+      <Footer />
     </main>
   );
 }

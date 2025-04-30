@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import SupabaseProvider from "@/context/SupabaseProvider";
+import StoreProvider from "./StoreProvider";
 import { Toaster } from "sonner";
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+import { ClientProviders } from "@/app/ClientProvider";
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "A Ecommerce Website",
@@ -32,9 +27,7 @@ export default function RootLayout({
       className="light"
       style={{ colorScheme: "light" }}
     >
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={inter.className}>
         <SupabaseProvider>
           <ThemeProvider
             attribute="class"
@@ -42,9 +35,12 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <Navbar />
-            {children}
-
+            <StoreProvider>
+              <ClientProviders>
+                <Navbar />
+                {children}
+              </ClientProviders>
+            </StoreProvider>
             <Toaster position="top-center" richColors />
           </ThemeProvider>
         </SupabaseProvider>

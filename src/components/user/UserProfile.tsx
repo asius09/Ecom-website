@@ -3,14 +3,19 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, Phone, Edit } from "lucide-react";
+import { User, Mail, Edit } from "lucide-react";
 import { useState } from "react";
+import { User as UserType } from "@/types/user";
+import { useAppSelector } from "@/lib/hooks";
 
 export function UserProfile() {
-  const [user, setUser] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 234 567 890",
+  const storeUser = useAppSelector((state) => state.user);
+  const [user, setUser] = useState<UserType>({
+    id: storeUser.id || "",
+    name: storeUser.name || "",
+    email: storeUser.email || "",
+    is_admin: storeUser.is_admin || false,
+    created_at: storeUser.created_at || new Date().toISOString(),
   });
   const [isEditing, setIsEditing] = useState(false);
 
@@ -73,21 +78,6 @@ export function UserProfile() {
                 onChange={handleChange}
                 placeholder="john.doe@example.com"
                 type="email"
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <div className="flex items-center gap-2">
-              <Phone className="w-5 h-5 text-muted-foreground" />
-              <Input
-                id="phone"
-                name="phone"
-                value={user.phone}
-                onChange={handleChange}
-                placeholder="+1 234 567 890"
                 disabled={!isEditing}
               />
             </div>

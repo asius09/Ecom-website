@@ -2,65 +2,92 @@
 
 import { Button } from "@/components/ui/button";
 import { Heart, Trash } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 import { QuantitySelector } from "./QuantitySelector";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { updateQuantity, removeFromCart } from "@/lib/store/slices/cartSlice";
+import { toggleWishlist } from "@/lib/store/slices/wishlistSlice";
+import { CartItem as CartItemProps } from "@/types/cartItem";
+import { useAppSelector, useAppDispatch } from "@/lib/hooks";
+import {
+  handleRemoveFromCart,
+  handleUpdateCartQuantity,
+} from "@/utils/product/cart";
+import { handleToggleWishlist } from "@/utils/product/wishlist";
 
-interface CartItemProps {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  imageUrl: string;
-  onRemove: (id: string) => void;
-  onQuantityChange: (id: string, quantity: number) => void;
-}
-
-export function CartItem({
-  id,
-  name,
-  price,
-  quantity,
-  imageUrl,
-  onRemove,
-  onQuantityChange,
-}: CartItemProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+export function CartItem({ id, user_id, product_id, quantity }: CartItemProps) {
+  const dispatch = useAppDispatch();
   const [isImageLoading, setIsImageLoading] = useState(true);
-  const isMobile = useIsMobile();
 
-  const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity > 0) {
-      onQuantityChange(id, newQuantity);
+  // Get product details and wishlist status from store
+  const product = useAppSelector((state) =>
+    state.products.products.find((p) => p.id === product_id)
+  );
+  const isWishlisted = useAppSelector((state) =>
+    state.wishlist.items.some(
+      (item) => item.user_id === user_id && item.product_id === product_id
+    )
+  );
+
+  const handleRemoveItem = async (id: string) => {
+    try {
+      await handleRemoveFromCart(id, user_id);
+      dispatch(removeFromCart(id));
+    } catch (error) {
+      console.error("Error removing item:", error);
     }
   };
 
-  const toggleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
+  const handleQuantityChange = async (newQuantity: number) => {
+    if (newQuantity >= 1) {
+      try {
+        const success = await handleUpdateCartQuantity(id, newQuantity);
+        if (success) {
+          dispatch(updateQuantity({ id, quantity: newQuantity }));
+        }
+      } catch (error) {
+        console.error("Error updating quantity:", error);
+      }
+    }
+  };
+
+  const handleToggleWishlistItem = async () => {
+    try {
+      const success = await handleToggleWishlist(product_id, user_id);
+      if (success !== undefined) {
+        dispatch(toggleWishlist({ user_id, product_id }));
+      }
+    } catch (error) {
+      console.error("Error toggling wishlist:", error);
+    }
+  };
+
+  if (!product) {
+    return null;
+  }
+
+  const calculateItemTotal = () => {
+    return (product.price * quantity).toFixed(2);
   };
 
   return (
     <div className="flex items-center gap-4 p-4 border rounded-lg hover:shadow-sm transition-shadow">
       <div className="relative w-24 h-24 flex-shrink-0">
-        {isImageLoading && (
-          <Skeleton className="absolute inset-0 rounded-md" />
-        )}
-        <Image
-          src={imageUrl}
-          alt={name}
-          fill
-          className={`object-cover rounded-md ${
+        {isImageLoading && <Skeleton className="absolute inset-0 rounded-md" />}
+        <img
+          src={product.image_url}
+          alt={product.name}
+          className={`object-cover rounded-md w-full h-full ${
             isImageLoading ? "opacity-0" : "opacity-100"
           }`}
-          onLoadingComplete={() => setIsImageLoading(false)}
-          sizes={isMobile ? "100vw" : "33vw"}
+          onLoad={() => setIsImageLoading(false)}
         />
       </div>
       <div className="flex-1 space-y-2">
-        <h3 className="font-medium line-clamp-2">{name}</h3>
-        <p className="text-muted-foreground">${price.toFixed(2)}</p>
+        <h3 className="font-medium line-clamp-2">{product.name}</h3>
+        <p className="text-muted-foreground">
+          ${product.price.toFixed(2)} x {quantity} = ${calculateItemTotal()}
+        </p>
         <div className="mt-2">
           <QuantitySelector
             initialQuantity={quantity}
@@ -71,12 +98,12 @@ export function CartItem({
         </div>
       </div>
       <div className="flex flex-col items-end gap-2">
-        <p className="font-medium">${(price * quantity).toFixed(2)}</p>
+        <p className="font-medium">${calculateItemTotal()}</p>
         <div className="flex gap-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={toggleWishlist}
+            onClick={handleToggleWishlistItem}
             aria-label="Move to wishlist"
             className="hover:bg-accent/50"
           >
@@ -89,7 +116,7 @@ export function CartItem({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onRemove(id)}
+            onClick={() => handleRemoveItem(id)}
             aria-label="Remove item"
             className="hover:bg-destructive/10"
           >

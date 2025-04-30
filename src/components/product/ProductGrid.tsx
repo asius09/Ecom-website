@@ -6,17 +6,10 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
+import { Product } from "@/types/product";
 
 interface ProductGridProps {
-  products: {
-    id: string;
-    name: string;
-    description: string;
-    price: number;
-    imageUrl?: string;
-    rating?: number;
-    reviewCount?: number;
-  }[];
+  products: Product[];
   variant?: "grid" | "slider";
 }
 
@@ -42,12 +35,14 @@ export function ProductGrid({ products, variant = "grid" }: ProductGridProps) {
               }`}
             >
               <ProductCard
+                id={product.id}
                 name={product.name}
                 description={product.description}
                 price={product.price}
-                imageUrl={product.imageUrl}
-                rating={product.rating}
-                reviewCount={product.reviewCount}
+                image_url={product.image_url}
+                review={product.review}
+                stock_quantity={product.stock_quantity}
+                createdAt={product.createdAt}
               />
             </CarouselItem>
           ))}
@@ -61,12 +56,14 @@ export function ProductGrid({ products, variant = "grid" }: ProductGridProps) {
       {products.map((product) => (
         <ProductCard
           key={product.id}
+          id={product.id}
           name={product.name}
           description={product.description}
           price={product.price}
-          imageUrl={product.imageUrl}
-          rating={product.rating}
-          reviewCount={product.reviewCount}
+          image_url={product.image_url}
+          review={product.review}
+          stock_quantity={product.stock_quantity}
+          createdAt={product.createdAt}
         />
       ))}
     </div>

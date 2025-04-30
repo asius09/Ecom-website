@@ -2,20 +2,7 @@
 import ProductDetail from "@/components/product/ProductDetail";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-  rating: number;
-  reviewCount: number;
-  stock: number;
-  sku: string;
-  brand: string;
-  category: string;
-}
+import { Product } from "@/types/product";
 
 const exampleProduct: Product = {
   id: "prod_123",
@@ -23,13 +10,11 @@ const exampleProduct: Product = {
   description:
     "Ergonomic executive chair with premium leather upholstery and adjustable features for maximum comfort.",
   price: 299.99,
-  imageUrl:
+  review: 4.7,
+  image_url:
     "https://images.unsplash.com/photo-1519947486511-46149fa0a254?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  rating: 4.7,
-  reviewCount: 342,
-  stock: 25,
-  sku: "CHAIR-LEATHER-001",
-  brand: "OfficePro",
+  stock_quantity: 25,
+  createdAt: new Date().toISOString(),
   category: "Furniture",
 };
 

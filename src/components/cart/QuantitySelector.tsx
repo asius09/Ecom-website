@@ -1,41 +1,28 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 interface QuantitySelectorProps {
-  initialQuantity: number;
+  quantity: number;
   min?: number;
   max?: number;
-  onQuantityChange: (quantity: number) => void;
+  onIncrease: () => void;
+  onDecrease: () => void;
 }
 
 export function QuantitySelector({
-  initialQuantity = 1,
+  quantity,
   min = 1,
   max = 99,
-  onQuantityChange,
+  onIncrease,
+  onDecrease,
 }: QuantitySelectorProps) {
-  const [quantity, setQuantity] = useState(initialQuantity);
-
-  const handleDecrement = () => {
-    const newQuantity = Math.max(min, quantity - 1);
-    setQuantity(newQuantity);
-    onQuantityChange(newQuantity);
-  };
-
-  const handleIncrement = () => {
-    const newQuantity = Math.min(max, quantity + 1);
-    setQuantity(newQuantity);
-    onQuantityChange(newQuantity);
-  };
-
   return (
     <div className="flex items-center gap-2">
       <Button
         variant="outline"
         size="sm"
-        onClick={handleDecrement}
+        onClick={onDecrease}
         disabled={quantity <= min}
         aria-label="Decrease quantity"
       >
@@ -45,7 +32,7 @@ export function QuantitySelector({
       <Button
         variant="outline"
         size="sm"
-        onClick={handleIncrement}
+        onClick={onIncrease}
         disabled={quantity >= max}
         aria-label="Increase quantity"
       >

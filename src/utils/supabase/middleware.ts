@@ -1,5 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function updateSession(request: NextRequest) {
   // Create an initial "pass-through" response
@@ -25,16 +25,22 @@ export async function updateSession(request: NextRequest) {
 
   // Refresh user if needed
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  console.log("MIDDLEWARE - user:", user);
+    data: { session },
+  } = await supabase.auth.getSession();
 
   // If not logged in and trying to access protected route → redirect
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
+  const isAuthRoute =
+    request.nextUrl.pathname.startsWith("/login") ||
+    request.nextUrl.pathname.startsWith("/auth") ||
+    request.nextUrl.pathname.startsWith("/signup");
+
+  if (session && isAuthRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
+  if (!session && !isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

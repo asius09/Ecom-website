@@ -16,7 +16,6 @@ import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { signup } from "../api/auth/action";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -33,7 +32,6 @@ export default function SignupPage() {
     name: "",
     email: "",
     password: "",
-    terms: "",
   });
 
   const validateForm = () => {
@@ -46,9 +44,16 @@ export default function SignupPage() {
         formData.password.length >= 8
           ? ""
           : "Password must be at least 8 characters",
-      terms: formData.terms ? "" : "You must accept the terms and conditions",
     };
     setErrors(newErrors);
+
+    if (!formData.terms) {
+      toast.error("Terms and Conditions", {
+        description: "You must accept the terms and conditions",
+      });
+      return false;
+    }
+
     return !Object.values(newErrors).some((error) => error);
   };
 
@@ -59,22 +64,25 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      const data = new FormData();
-      data.append("email", formData.email);
-      data.append("password", formData.password);
-      data.append("name", formData.name);
-
-      const isSingup = await signup(data);
-      if (isSingup) {
+      const options = {
+        method: "POST",
+        headers: { "Content-type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      };
+      const response = await fetch("/api/auth/signup", options);
+      const data = await response.json();
+      if (data.status === 200) {
         toast.success("Sign up successful!", {
           description: "Please check your email to verify your account.",
         });
         router.push("/login");
-      } else {
-        throw new Error("Failed to signup, Please Try again");
       }
+      throw new Error(data.error);
     } catch (error) {
-      console.error("Sign up error:", error);
       toast.error("Sign up failed", {
         description:
           error instanceof Error ? error.message : "An error occurred",
@@ -92,16 +100,13 @@ export default function SignupPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md my-8">
+      <Card className="w-full max-w-sm md:max-w-md mx-4 my-8">
         <CardHeader className="flex flex-col items-center">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            MyShop
-          </h1>
           <CardTitle className="text-2xl text-center">Create Account</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-3">
               <Label>Full Name</Label>
               <Input
                 value={formData.name}
@@ -110,12 +115,13 @@ export default function SignupPage() {
                 }
                 placeholder="Enter your full name"
                 autoComplete="name"
+                className={errors.name ? "border-red-500" : ""}
               />
               {errors.name && (
                 <p className="text-sm text-red-500">{errors.name}</p>
               )}
             </div>
-            <div>
+            <div className="space-y-3">
               <Label>Email</Label>
               <Input
                 value={formData.email}
@@ -124,12 +130,13 @@ export default function SignupPage() {
                 }
                 placeholder="Enter your email"
                 autoComplete="email"
+                className={errors.email ? "border-red-500" : ""}
               />
               {errors.email && (
                 <p className="text-sm text-red-500">{errors.email}</p>
               )}
             </div>
-            <div>
+            <div className="space-y-3">
               <Label>Password</Label>
               <div className="relative">
                 <Input
@@ -140,6 +147,7 @@ export default function SignupPage() {
                   }
                   placeholder="Enter your password"
                   autoComplete="new-password"
+                  className={errors.password ? "border-red-500" : ""}
                 />
                 <button
                   type="button"
@@ -158,7 +166,7 @@ export default function SignupPage() {
                 <p className="text-sm text-red-500">{errors.password}</p>
               )}
             </div>
-            <div className="flex items-start space-x-2">
+            <div className="flex items-start space-x-3">
               <Checkbox
                 id="terms"
                 checked={formData.terms}
@@ -168,12 +176,12 @@ export default function SignupPage() {
                 aria-label="Accept terms and conditions"
                 className="cursor-pointer"
               />
-              <div className="space-y-1">
+              <div className="mt-0.5">
                 <Label htmlFor="terms" className="text-sm leading-none">
                   I agree to the{" "}
                   <button
                     type="button"
-                    className="text-primary hover:underline"
+                    className="text-primary hover:underline cursor-pointer p-0"
                     onClick={() => setTermsOpen(true)}
                     aria-label="View terms and conditions"
                   >
@@ -182,9 +190,6 @@ export default function SignupPage() {
                 </Label>
               </div>
             </div>
-            {errors.terms && (
-              <p className="text-sm text-red-500">{errors.terms}</p>
-            )}
             <Button
               type="submit"
               className="w-full"

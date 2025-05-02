@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { useSupabase } from "@/context/SupabaseProvider";
 import { LogOutBtn } from "./auth/LogOutBtn";
 import { useAppSelector } from "@/lib/hooks";
+import { Logo } from "@/components/Logo";
 
 interface MenuItem {
   type: string;
@@ -46,9 +47,7 @@ export function Navbar() {
       setIsHydrated(true);
     }, 300);
     return () => clearTimeout(timer);
-    if (!userId || !isAdmin) {
-      window.location.reload();
-    }
+    
   }, []);
 
   const mobileMenu: MenuItem[] = [
@@ -140,13 +139,7 @@ export function Navbar() {
       <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between mx-auto">
           <div className="flex items-center gap-6">
-            <Link
-              key="logo-link"
-              href="/"
-              className="pl-2 md:pl-0 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-            >
-              MyShop
-            </Link>
+            <Logo />
           </div>
           <div className="flex items-center gap-4">
             <div className="h-10 w-10 bg-muted rounded-full animate-pulse" />
@@ -161,13 +154,7 @@ export function Navbar() {
       <div className="container flex h-16 items-center justify-between mx-auto">
         <div className="flex items-center gap-6">
           {/* Logo */}
-          <Link
-            key="logo-link"
-            href="/"
-            className="pl-3 md:pl-0 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-          >
-            MyShop
-          </Link>
+          <Logo />
         </div>
 
         {/* Search Bar */}

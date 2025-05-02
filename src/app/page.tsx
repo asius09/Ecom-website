@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { Product } from "@/types/product";
 import { Skeleton } from "@/components/ui/skeleton";
+
 export default function Home() {
   // State management for products and loading status
   const [products, setProducts] = useState<Product[]>([]);

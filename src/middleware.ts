@@ -11,5 +11,8 @@ export const config = {
     "/account/:path*", // protects /account/*
     "/cart/:path*", // protects /cart/*
     "/wishlist/:path*", // protects /wishlist/*
+    "/login", // protects /login
+    "/signup", // protects /signup
+    // "/orders/*", //protects /orders/*
   ],
 };

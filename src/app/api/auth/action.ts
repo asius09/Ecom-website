@@ -17,7 +17,7 @@ export async function login(
 
     const { data: authData, error } =
       await supabase.auth.signInWithPassword(data);
-
+    console.log("Login Error From API: ", error);
     if (error) {
       throw error;
     }

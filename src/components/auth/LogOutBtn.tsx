@@ -8,7 +8,6 @@ import { clearUser } from "@/lib/store/slices/userSlice";
 import { clearWishlist } from "@/lib/store/slices/wishlistSlice";
 import { useAppDispatch } from "@/lib/hooks";
 
-
 interface LogOutBtnProps {
   variant?: "text" | "button";
 }

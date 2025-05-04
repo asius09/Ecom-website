@@ -1,5 +1,5 @@
 "use client";
-import { ProductGrid } from "@/components/product/ProductGrid";
+import { ProductList } from "@/components/product/ProductList";
 import { useParams } from "next/navigation";
 import { Heart } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
@@ -8,6 +8,7 @@ import { setupWishlistRealTime } from "@/service/realTime";
 import { fetchWishlistProducts } from "@/app/api/products/users/wishlist/action";
 import { setWishlist } from "@/lib/store/slices/wishlistSlice";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProductListVarients } from "@/constants/productList";
 
 export default function WishlistPage() {
   const { slug: userId } = useParams();
@@ -74,7 +75,10 @@ export default function WishlistPage() {
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Your Wishlist</h1>
       {wishlistProducts.length > 0 ? (
-        <ProductGrid products={wishlistProducts} />
+        <ProductList
+          products={wishlistProducts}
+          variant={ProductListVarients.GRID}
+        />
       ) : (
         <div className="flex flex-col items-center justify-center py-16 space-y-6">
           <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center">

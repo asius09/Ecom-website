@@ -4,9 +4,9 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { ProductsLoader } from "@/components/product/ProductLoader";
-import SupabaseProvider from "@/context/SupabaseProvider";
 import { StoreProvider } from "./StoreProvider";
 import { Toaster } from "sonner";
+import { createClient } from "@/utils/supabase/server";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,11 +18,24 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let user = null;
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.getUser();
+    if (!error) {
+      user = data.user;
+    }
+  } catch (error) {
+    console.error("Error fetching user:", error);
+  }
+
   return (
     <html
       lang="en"
@@ -31,21 +44,19 @@ export default function RootLayout({
       style={{ colorScheme: "light" }}
     >
       <body className={inter.className}>
-        <SupabaseProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <StoreProvider>
-              <ProductsLoader />
-              <Navbar />
-              {children}
-            </StoreProvider>
-            <Toaster position="top-center" richColors />
-          </ThemeProvider>
-        </SupabaseProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <StoreProvider>
+            <ProductsLoader />
+            <Navbar user={user} />
+            {children}
+          </StoreProvider>
+          <Toaster position="top-center" richColors />
+        </ThemeProvider>
       </body>
     </html>
   );

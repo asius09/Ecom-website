@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, ShoppingCart, Users, Package } from "lucide-react";
 
-export  function AdminDashboard() {
+export function AdminDashboard() {
   const stats = [
     {
       title: "Total Orders",

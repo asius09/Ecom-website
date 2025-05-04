@@ -13,12 +13,8 @@ import {
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { login } from "../api/auth/action";
 import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/lib/hooks";
-import { setUser } from "@/lib/store/slices/userSlice";
-import { User } from "@/types/user";
-import { stat } from "fs";
 
 export default function LoginPage() {
   const router = useRouter();

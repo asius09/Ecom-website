@@ -85,7 +85,9 @@ export function UserPayment() {
               className="p-4 border rounded-lg flex justify-between items-center"
             >
               <div>
-                <p className="font-medium">**** **** **** {method.cardNumber.slice(-4)}</p>
+                <p className="font-medium">
+                  **** **** **** {method.cardNumber.slice(-4)}
+                </p>
                 <p className="text-sm text-muted-foreground">
                   Expires {method.expiration}
                 </p>

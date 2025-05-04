@@ -9,7 +9,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const storeRef = useRef<{
     store: ReturnType<typeof makeStore>["store"];
     persistor: ReturnType<typeof makeStore>["persistor"];
-  } | null>(null);
+  }>(null);
 
   if (!storeRef.current) {
     const { store, persistor } = makeStore();

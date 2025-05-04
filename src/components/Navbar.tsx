@@ -4,20 +4,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ModeToggle";
 import { usePathname } from "next/navigation";
-import {
-  ShoppingCart,
-  Menu,
-  User,
-  Heart,
-  X,
-  LayoutDashboard,
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { ShoppingCart, Menu, User, Heart, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { useSupabase } from "@/context/SupabaseProvider";
 import { LogOutBtn } from "./auth/LogOutBtn";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { Logo } from "@/components/Logo";
+import { Skeleton } from "@/components/ui/skeleton";
+import { setUser } from "@/lib/store/slices/userSlice";
 
 interface MenuItem {
   type: string;
@@ -29,26 +23,55 @@ interface MenuItem {
   className?: string;
 }
 
-export function Navbar() {
+export function Navbar({ user }: { user: any }) {
+  const dispatch = useAppDispatch();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const { id: user_id } = useAppSelector((state) => state.user);
+  const [userId, setUserId] = useState<string | undefined>(user?.id);
+  const [cartItemCount, setCartItemCount] = useState(0);
+  const [wishlistItemCount, setWishlistItemCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const { user, isLoading } = useSupabase();
+  const getInitialData = async () => {
+    try {
+      if (!userId) {
+        setLoading(true);
+      }
+      if (user) {
+        setUserId(user?.id);
 
-  const { id: userId, is_admin: isAdmin } = useAppSelector(
-    (state) => state.user
-  );
-  const { itemCount: cartItems } = useAppSelector((state) => state.cart);
+        dispatch(
+          setUser({
+            id: user?.id,
+            name: user?.user_metadata.name,
+            is_admin: user?.user_metadata.is_admin,
+            email: user?.email,
+            created_at: user?.created_at,
+          })
+        );
 
-  useEffect(() => {
-    // Add a small delay to ensure Redux state is hydrated
-    const timer = setTimeout(() => {
-      setIsHydrated(true);
-    }, 300);
-    return () => clearTimeout(timer);
-    
-  }, []);
+        const [wishlistResponse, cartResponse] = await Promise.all([
+          fetch(`/api/user/wishlist?userId=${user.id}`),
+          fetch(`/api/user/cart?userId=${user.id}`),
+        ]);
+
+        if (wishlistResponse.status !== 200 || cartResponse.status !== 200) {
+          throw new Error("Failed to fetch user data");
+        }
+
+        const { wishlistRes } = await wishlistResponse.json();
+        const { cartRes } = await cartResponse.json();
+
+        setWishlistItemCount(wishlistRes?.length || 0);
+        setCartItemCount(cartRes?.length || 0);
+      }
+    } catch (error) {
+      throw new Error("Failed to get user data: " + error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const mobileMenu: MenuItem[] = [
     {
@@ -65,17 +88,6 @@ export function Navbar() {
       icon: <Heart className="h-5 w-5" />,
       active: pathname.startsWith("/wishlist"),
     },
-    ...(isAdmin
-      ? [
-          {
-            type: "route",
-            href: "/admin",
-            label: "Dashboard",
-            icon: <LayoutDashboard className="h-5 w-5" />,
-            active: pathname.startsWith("/admin"),
-          },
-        ]
-      : []),
     {
       type: "button",
       label: "Theme",
@@ -100,22 +112,19 @@ export function Navbar() {
       type: "route",
       href: `/wishlist/${userId}`,
       label: "Wishlist",
-      icon: <Heart className="h-5 w-5" />,
+      icon: (
+        <>
+          <Heart className="h-5 w-5" />
+          {wishlistItemCount !== 0 ? (
+            <span className="absolute -top-1 -right-0.5 bg-primary text-primary-foreground rounded-full text-xs px-1.5 py-0.5">
+              {wishlistItemCount}
+            </span>
+          ) : null}
+        </>
+      ),
       active: pathname.startsWith("/wishlist"),
       className: "hidden md:flex",
     },
-    ...(isAdmin
-      ? [
-          {
-            type: "route",
-            href: "/admin",
-            label: "Dashboard",
-            icon: <LayoutDashboard className="h-5 w-5" />,
-            active: pathname.startsWith("/admin"),
-            className: "hidden md:flex",
-          },
-        ]
-      : []),
     {
       type: "route",
       href: `/cart/${userId}`,
@@ -123,26 +132,42 @@ export function Navbar() {
       icon: (
         <>
           <ShoppingCart className="h-5 w-5" />
-          <span className="absolute -top-1 -right-0.5 bg-primary text-primary-foreground rounded-full text-xs px-1.5 py-0.5">
-            {cartItems}
-          </span>
+          {cartItemCount !== 0 ? (
+            <span className="absolute -top-1 -right-0.5 bg-primary text-primary-foreground rounded-full text-xs px-1.5 py-0.5">
+              {cartItemCount}
+            </span>
+          ) : null}
         </>
       ),
       active: pathname.startsWith("/cart"),
     },
   ];
 
-  if (pathname === "/login" || pathname === "/signup") return null;
+  useEffect(() => {
+    if (pathname !== "/login" && pathname !== "/signup" && !userId) {
+      getInitialData();
+    }
+  }, [pathname, user]);
 
-  if (isLoading || !isHydrated) {
+  if (pathname === "/login" || pathname === "/signup") {
+    return null;
+  }
+
+  if (loading && !userId) {
     return (
       <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between mx-auto">
+        <div className="w-full flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-6">
-            <Logo />
+            <Skeleton className="h-8 w-32 rounded-md" />
+          </div>
+          <div className="flex-1 mx-8 max-w-md">
+            <Skeleton className="w-full h-10 rounded-md" />
           </div>
           <div className="flex items-center gap-4">
-            <div className="h-10 w-10 bg-muted rounded-full animate-pulse" />
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-10 w-10 rounded-full" />
           </div>
         </div>
       </header>
@@ -151,14 +176,12 @@ export function Navbar() {
 
   return (
     <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between mx-auto">
+      <div className="w-full flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-6">
-          {/* Logo */}
           <Logo />
         </div>
 
-        {/* Search Bar */}
-        <div className="flex-1 max-w-md mx-4">
+        <div className="flex-1 mx-8 max-w-md">
           <Input
             type="search"
             placeholder="Search products..."
@@ -166,20 +189,21 @@ export function Navbar() {
           />
         </div>
 
-        {/* Right Side Icons */}
         <div className="flex items-center gap-4">
-          {user ? (
-            rightRoutes.map((route) => (
-              <Button
-                key={route.href}
-                variant="ghost"
-                size="icon"
-                className={`relative ${route.className || ""}`}
-                asChild
-              >
-                <Link href={route.href!}>{route.icon}</Link>
-              </Button>
-            ))
+          {userId ? (
+            rightRoutes.map((route) => {
+              return (
+                <Button
+                  key={route.href}
+                  variant="ghost"
+                  size="icon"
+                  className={`relative ${route.className || ""}`}
+                  asChild
+                >
+                  <Link href={route.href!}>{route.icon}</Link>
+                </Button>
+              );
+            })
           ) : (
             <div className="flex items-center gap-1 font-semibold text-sm">
               <Link href="/login" className="hover:underline">
@@ -196,17 +220,17 @@ export function Navbar() {
             <ModeToggle />
           </div>
 
-          {/* Mobile Menu Button */}
           <Button
             variant="ghost"
             size="icon"
             className="md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => {
+              setMobileMenuOpen(!mobileMenuOpen);
+            }}
           >
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden">
               <div className="absolute top-0 right-0 h-[100dvh] w-72 bg-background border-l shadow-lg animate slide-in">
@@ -215,7 +239,9 @@ export function Navbar() {
                     variant="ghost"
                     size="icon"
                     className="rounded-full text-foreground cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                    }}
                     aria-label="Close menu"
                   >
                     <X />

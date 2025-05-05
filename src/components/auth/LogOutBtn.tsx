@@ -2,11 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { signout } from "@/app/api/auth/action";
-import { clearCart } from "@/lib/store/slices/cartSlice";
-import { clearUser } from "@/lib/store/slices/userSlice";
-import { clearWishlist } from "@/lib/store/slices/wishlistSlice";
+import { clearCart } from "@/lib/store/features/cartSlice";
+import { clearUser } from "@/lib/store/features/userSlice";
+import { clearWishlist } from "@/lib/store/features/wishlistSlice";
 import { useAppDispatch } from "@/lib/hooks";
+import { supabase } from "@/utils/supabase/client";
 
 interface LogOutBtnProps {
   variant?: "text" | "button";
@@ -18,8 +18,8 @@ export function LogOutBtn({ variant = "button" }: LogOutBtnProps) {
 
   const handleLogout = async () => {
     try {
-      const success = await signout();
-      if (success) {
+      const { error } = await supabase.auth.signOut();
+      if (!error) {
         dispatch(clearCart());
         dispatch(clearUser());
         dispatch(clearWishlist());

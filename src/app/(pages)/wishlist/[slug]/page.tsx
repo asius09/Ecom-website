@@ -4,9 +4,8 @@ import { useParams } from "next/navigation";
 import { Heart } from "lucide-react";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
 import { useEffect } from "react";
-import { setupWishlistRealTime } from "@/service/realTime";
 import { fetchWishlistProducts } from "@/app/api/products/users/wishlist/action";
-import { setWishlist } from "@/lib/store/slices/wishlistSlice";
+import { setWishlist } from "@/lib/store/features/wishlistSlice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductListVarients } from "@/constants/productList";
 
@@ -36,13 +35,6 @@ export default function WishlistPage() {
     };
 
     fetchWishlist();
-
-    // Realtime setup
-    const cleanupPromise = setupWishlistRealTime(userIdString, dispatch);
-
-    return () => {
-      cleanupPromise.then((cleanup) => cleanup());
-    };
   }, [userIdString, dispatch]);
 
   if (!userIdString) {

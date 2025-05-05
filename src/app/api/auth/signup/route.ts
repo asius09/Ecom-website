@@ -53,9 +53,9 @@ export async function POST(request: Request) {
         created_at: new Date().toISOString(),
       });
 
-      if (insertError) {
-        throw insertError;
-      }
+      // if (insertError) {
+      //   throw insertError;
+      // }
     }
 
     // On successful signup

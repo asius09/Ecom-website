@@ -1,7 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function createClient(isAdmin: boolean = false) {
+export async function createClient({
+  isAdmin = false,
+}: { isAdmin?: boolean } = {}) {
   const cookieStore = await cookies();
   const nextKey = isAdmin
     ? process.env.NEXT_SECRET_SUPABASE_SERVICE_ROLE_KEY!

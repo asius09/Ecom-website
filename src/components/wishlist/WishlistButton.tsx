@@ -6,7 +6,6 @@ import { useAppSelector, useAppDispatch } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { handleToggleWishlist } from "@/utils/product/wishlist";
-import { toggleWishlist } from "@/lib/store/slices/wishlistSlice";
 
 interface WishlistButtonProps {
   productId: string;
@@ -32,16 +31,10 @@ export function WishlistButton({ productId, className }: WishlistButtonProps) {
   }, [wishlistItems, productId, userId]);
 
   const handleClick = async () => {
-    if (!userId) {
-      console.error("User ID is required for wishlist operations");
-      return;
-    }
-
     setIsLoading(true);
     try {
-      const success = await handleToggleWishlist(productId, userId);
+      const success = await handleToggleWishlist(productId, userId!, dispatch);
       if (success !== undefined) {
-        dispatch(toggleWishlist({ user_id: userId, product_id: productId }));
         setIsInWishlist(success);
       }
     } catch (error) {

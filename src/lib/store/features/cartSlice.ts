@@ -1,16 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { CartItem } from "@/types/cartItem";
-import { nanoid } from "@reduxjs/toolkit";
 
 interface CartState {
   items: CartItem[];
-  pendingUpdates: Record<string, boolean>;
   itemCount: number;
 }
 
 const initialState: CartState = {
   items: [],
-  pendingUpdates: {},
   itemCount: 0,
 };
 
@@ -25,19 +22,15 @@ const cartSlice = createSlice({
         0
       );
     },
-    updateQuantity: (
-      state,
-      action: PayloadAction<{ id: string; quantity: number }>
-    ) => {
-      const item = state.items.find((item) => item.id === action.payload.id);
-      if (item) {
-        const oldQuantity = item.quantity;
-        item.quantity = action.payload.quantity;
-        state.itemCount += action.payload.quantity - oldQuantity;
-      }
-    },
     addToCart: (state, action: PayloadAction<CartItem>) => {
-      state.items.push(action.payload);
+      const existingItem = state.items.find(
+        (item) => item.product_id === action.payload.product_id
+      );
+      if (existingItem) {
+        existingItem.quantity += action.payload.quantity;
+      } else {
+        state.items.push(action.payload);
+      }
       state.itemCount += action.payload.quantity;
     },
     removeFromCart: (state, action: PayloadAction<string>) => {
@@ -51,23 +44,10 @@ const cartSlice = createSlice({
       state.items = [];
       state.itemCount = 0;
     },
-    optimisticUpdateStart: (state, action: PayloadAction<string>) => {
-      state.pendingUpdates[action.payload] = true;
-    },
-    optimisticUpdateEnd: (state, action: PayloadAction<string>) => {
-      delete state.pendingUpdates[action.payload];
-    },
   },
 });
 
-export const {
-  setCartItems,
-  updateQuantity,
-  addToCart,
-  removeFromCart,
-  clearCart,
-  optimisticUpdateStart,
-  optimisticUpdateEnd,
-} = cartSlice.actions;
+export const { setCartItems, addToCart, removeFromCart, clearCart } =
+  cartSlice.actions;
 
 export default cartSlice.reducer;

@@ -52,47 +52,6 @@ export default function LoginPage() {
     return true;
   };
 
-  /* 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    setIsLoading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("email", email);
-      formData.append("password", password);
-      const {
-        success,
-        data: { user },
-      } = await login(formData);
-      if (success) {
-        const userData: User = {
-          id: user.id,
-          email: user.email,
-          name: user.user_metadata?.name || "",
-          is_admin: user.user_metadata?.is_admin || false,
-          created_at: user.created_at,
-        };
-        dispatch(setUser(userData));
-        toast.success("Login successful!");
-        router.push("/");
-        router.refresh();
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Login failed", {
-        description:
-          error instanceof Error ? error.message : "An error occurred",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-*/
-
   // Using Route to Post Method to our own api
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +71,8 @@ export default function LoginPage() {
       const data = await response.json();
       if (data.status === 200) {
         toast.success("Login successful!");
-        router.push("/");
+        const redirectPath = data?.data.user_metadata.is_admin ? "/admin" : "/";
+        router.push(redirectPath);
         router.refresh();
         return;
       }

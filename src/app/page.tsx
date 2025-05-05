@@ -49,7 +49,7 @@ const categories: CategoryItem[] = [
 
 const demoProducts: Product[] = [
   {
-    id: "1",
+    id: "b19b7f40-8e5a-4b1d-9c8a-7f3e5d6c4b2a",
     name: "Wireless Bluetooth Earbuds",
     description: "High-quality sound with noise cancellation",
     price: 99.99,
@@ -59,7 +59,7 @@ const demoProducts: Product[] = [
     createdAt: "2023-01-01",
   },
   {
-    id: "2",
+    id: "c28a6f51-9e6b-4c2d-8d9a-6f4e5d7c3b1b",
     name: "Smart Watch Pro",
     description: "Fitness tracking and heart rate monitoring",
     price: 199.99,
@@ -69,7 +69,7 @@ const demoProducts: Product[] = [
     createdAt: "2023-02-15",
   },
   {
-    id: "3",
+    id: "d39b7f62-af7c-4d3e-9e8b-7f5e6d4c2b3c",
     name: "Leather Jacket",
     description: "Premium quality genuine leather jacket",
     price: 299.99,
@@ -79,7 +79,7 @@ const demoProducts: Product[] = [
     createdAt: "2023-03-10",
   },
   {
-    id: "4",
+    id: "e48c8f73-bf8d-4e4f-af9c-8f6e7d5c3b4d",
     name: "Blender Pro 2000",
     description: "High-power kitchen blender with multiple settings",
     price: 149.99,
@@ -89,7 +89,7 @@ const demoProducts: Product[] = [
     createdAt: "2023-04-05",
   },
   {
-    id: "5",
+    id: "f59d9f84-cf9e-4f5f-bfad-9f7e8d6c4b5e",
     name: "Anti-Aging Cream",
     description: "Advanced formula for youthful skin",
     price: 79.99,
@@ -116,6 +116,8 @@ export default function Home() {
       link: "/sale",
     },
   ];
+
+ 
 
   if (loading) {
     return (

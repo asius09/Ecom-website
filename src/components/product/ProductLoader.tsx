@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useAppDispatch } from "@/lib/hooks";
-import { setProducts } from "@/lib/store/slices/productSlice";
+import { setProducts } from "@/lib/store/features/productSlice";
 import { fetchAllProducts } from "@/app/api/products/users/action";
 
 export function ProductsLoader() {

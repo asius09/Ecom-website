@@ -15,15 +15,11 @@ import { Separator } from "@/components/ui/separator";
 import { Trash, ShoppingCart } from "lucide-react";
 import { QuantitySelector } from "@/components/cart/QuantitySelector";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
-import {
-  updateQuantity,
-  removeFromCart,
-  setCartItems,
-} from "@/lib/store/slices/cartSlice";
 import { supabase } from "@/utils/supabase/client";
 import { setupCartRealtime } from "@/service/realTime";
-import { handleRemoveFromCart } from "@/utils/product/cart";
+import { handleRemoveFromCart, handleAddToCart } from "@/utils/product/cart";
 import Link from "next/link";
+import { setCartItems } from "@/lib/store/features/cartSlice";
 
 export default function CartPage() {
   const dispatch = useAppDispatch();
@@ -47,11 +43,6 @@ export default function CartPage() {
     };
 
     fetchInitialCart();
-    const cleanup = setupCartRealtime(userId, dispatch);
-
-    return () => {
-      cleanup();
-    };
   }, [userId, dispatch]);
 
   useEffect(() => {
@@ -64,46 +55,19 @@ export default function CartPage() {
     setTotal(newSubtotal + shipping);
   }, [cartItems, products, userId]);
 
-  const debouncedUpdate = useCallback(
-    debounce(async (itemId: string, newQuantity: number) => {
-      try {
-        const { error } = await supabase
-          .from("cart_items")
-          .update({ quantity: newQuantity })
-          .eq("id", itemId);
-
-        if (error) throw error;
-        toast.success("Quantity updated");
-      } catch (error) {
-        toast.error("Failed to update quantity");
-        console.error("Update error:", error);
-      }
-    }, 500),
-    []
-  );
-
-  const handleQuantityChange = (itemId: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    dispatch(updateQuantity({ id: itemId, quantity: newQuantity }));
-    debouncedUpdate(itemId, newQuantity);
-  };
-
   const handleRemoveItem = async (itemId: string) => {
     try {
-      dispatch(removeFromCart(itemId));
-      await handleRemoveFromCart(itemId, userId!);
+      await handleRemoveFromCart(itemId, userId!, dispatch);
     } catch (error) {
       console.error("Remove Cart Item error:", error);
     }
   };
 
-  const handleToggleWishlist = async (productId: string) => {
+  const handleQuantityChange = async (itemId: string, quantity: number = 1) => {
     try {
-      handleToggleWishlist(productId);
-      toast.success("Wishlist updated");
+      await handleAddToCart(itemId, userId!, dispatch, quantity);
     } catch (error) {
-      toast.error("Failed to update wishlist");
-      console.error("Wishlist error:", error);
+      console.error("Error updating cart quantity:", error);
     }
   };
 
@@ -200,12 +164,8 @@ export default function CartPage() {
                         {/* Quantity Selector */}
                         <QuantitySelector
                           quantity={item.quantity}
-                          onIncrease={() =>
-                            handleQuantityChange(item.id, item.quantity + 1)
-                          }
-                          onDecrease={() =>
-                            handleQuantityChange(item.id, item.quantity - 1)
-                          }
+                          onIncrease={() => handleQuantityChange(item.id, 1)}
+                          onDecrease={() => handleQuantityChange(item.id, 1)}
                           min={1}
                           max={99}
                         />

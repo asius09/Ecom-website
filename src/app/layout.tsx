@@ -4,7 +4,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { ProductsLoader } from "@/components/product/ProductLoader";
-import { StoreProvider } from "./StoreProvider";
+import { StoreProvider } from "../lib/store/StoreProvider";
 import { Toaster } from "sonner";
 import { createClient } from "@/utils/supabase/server";
 
@@ -31,6 +31,7 @@ export default async function RootLayout({
     const { data, error } = await supabase.auth.getUser();
     if (!error) {
       user = data.user;
+      
     }
   } catch (error) {
     console.error("Error fetching user:", error);

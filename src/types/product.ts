@@ -5,8 +5,8 @@ export interface Product {
   price: number;
   review: number;
   image_url: string;
-  createdAt: string;
-  updatedAt?: string;
+  created_at: string;
+  updated_at?: string;
   category?: string;
   stock_quantity: number;
 }

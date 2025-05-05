@@ -11,7 +11,7 @@ import { LogOutBtn } from "./auth/LogOutBtn";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { Logo } from "@/components/Logo";
 import { Skeleton } from "@/components/ui/skeleton";
-import { setUser } from "@/lib/store/slices/userSlice";
+import { setUser } from "@/lib/store/features/userSlice";
 
 interface MenuItem {
   type: string;

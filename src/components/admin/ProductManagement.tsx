@@ -14,12 +14,16 @@ import { Badge } from "@/components/ui/badge";
 import { ProductComposer } from "./ProductComposer";
 import { Product } from "@/types/product";
 import { Pencil, Trash2 } from "lucide-react";
+import Image from "next/image";
+import { deleteProduct, updateProduct } from "@/utils/product/admin";
+import { useAppDispatch } from "@/lib/hooks";
 
 interface ProductManagementProps {
   products: Product[];
 }
 
 export function ProductManagement({ products }: ProductManagementProps) {
+  const dispatch = useAppDispatch();
   const getStockStatus = (quantity: number) => {
     if (quantity > 10) return "In Stock";
     if (quantity > 0) return "Low Stock";
@@ -58,6 +62,17 @@ export function ProductManagement({ products }: ProductManagementProps) {
     }
   };
 
+  const handleDelete = async (product: Product) => {
+    try {
+      await deleteProduct(product, dispatch);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error("Error deleting product:", error.message);
+      } else {
+        console.error("An unknown error occurred while deleting the product");
+      }
+    }
+  };
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
@@ -72,6 +87,7 @@ export function ProductManagement({ products }: ProductManagementProps) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Image</TableHead>
                 <TableHead>Product Name</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
@@ -83,6 +99,16 @@ export function ProductManagement({ products }: ProductManagementProps) {
             <TableBody>
               {products.map((product) => (
                 <TableRow key={product.id}>
+                  <TableCell>
+                    <div className="relative h-15 w-15">
+                      <Image
+                        src={product.image_url}
+                        alt={product.name}
+                        fill
+                        className="rounded-md object-cover"
+                      />
+                    </div>
+                  </TableCell>
                   <TableCell>{product.name}</TableCell>
                   <TableCell>${product.price.toFixed(2)}</TableCell>
                   <TableCell>{product.stock_quantity}</TableCell>
@@ -94,18 +120,20 @@ export function ProductManagement({ products }: ProductManagementProps) {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="gap-1 cursor-pointer"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Edit
-                      </Button>
+                      <ProductComposer
+                        product={product}
+                        buttonText={
+                          <>
+                            <Pencil className="h-4 w-4" />
+                            Edit
+                          </>
+                        }
+                      />
                       <Button
                         variant="destructive"
                         size="sm"
                         className="gap-1 cursor-pointer"
+                        onClick={async () => await handleDelete(product)}
                       >
                         <Trash2 className="h-4 w-4" />
                         Delete

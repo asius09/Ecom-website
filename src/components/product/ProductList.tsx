@@ -30,7 +30,7 @@ export function ProductList({
   );
 
   const renderGrid = () => (
-    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 p-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-1 p-4">
       {products.map((product) => (
         <ProductCard
           key={product.id}
@@ -67,8 +67,8 @@ export function ProductList({
               key={product.id}
               className={`pl-0 ${
                 isMobile
-                  ? "basis-[50%] sm:basis-[40%]"
-                  : "basis-1/2 md:basis-1/3 lg:basis-1/5"
+                  ? "basis-[100%] sm:basis-[80%]"
+                  : "basis-1 md:basis-1/3 lg:basis-1/4"
               }`}
             >
               <div className="flex justify-center px-4">

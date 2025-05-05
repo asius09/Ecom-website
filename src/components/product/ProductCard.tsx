@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Star } from "lucide-react";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { Product } from "@/types/product";
 import { handleAddToCart } from "@/utils/product/cart";
 import { useRouter } from "next/navigation";
@@ -21,6 +21,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const { id: userId } = useAppSelector((state) => state.user);
   const route = useRouter();
+  const dispatch = useAppDispatch();
 
   const cardActionBtns = [
     {
@@ -30,7 +31,7 @@ export function ProductCard({
         e.preventDefault();
         e.stopPropagation();
         try {
-          const success = await handleAddToCart(id, userId!);
+          await handleAddToCart(id, userId!, dispatch);
         } catch (error) {
           console.error("Error adding to cart:", error);
         }
@@ -43,10 +44,8 @@ export function ProductCard({
         e.preventDefault();
         e.stopPropagation();
         try {
-          const success = await handleAddToCart(id, userId!);
-          if (success) {
-            route.push(`/cart/${userId}`);
-          }
+          await handleAddToCart(id, userId!, dispatch);
+          route.push(`/cart/${userId}`);
         } catch (error) {
           console.error("Error during Buy Now:", error);
         }
@@ -56,10 +55,10 @@ export function ProductCard({
   ];
 
   return (
-    <div className="bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow w-full max-w-[240px] min-w-[120px] sm:min-w-[140px] md:max-w-[280px] flex-1">
-      <Link href={`/product/${id}`} className="block">
+    <div className="bg-card rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow w-[300px] h-[400px] flex flex-col">
+      <Link href={`/product/${id}`} className="flex flex-col h-full">
         {image_url && (
-          <div className="relative aspect-[4/3]">
+          <div className="relative aspect-[4/3] flex-shrink-0">
             <img
               src={image_url}
               alt={name}
@@ -67,7 +66,7 @@ export function ProductCard({
               loading="lazy"
             />
             <div
-              className="absolute top-1 right-1 sm:top-2 sm:right-2"
+              className="absolute top-2 right-2"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -80,11 +79,11 @@ export function ProductCard({
             </div>
           </div>
         )}
-        <div className="p-2 sm:p-3 flex flex-col w-full">
-          <h3 className="text-xs sm:text-sm md:text-base font-semibold text-card-foreground mb-1 truncate max-w-[200px]">
+        <div className="p-3 flex flex-col flex-1 gap-1">
+          <h3 className="text-base font-semibold text-card-foreground truncate">
             {name}
           </h3>
-          <div className="flex items-center gap-0.5 mb-1">
+          <div className="flex items-center gap-1">
             {Array.from({ length: 5 }).map((_, i) => (
               <Star
                 key={i}
@@ -99,29 +98,30 @@ export function ProductCard({
               ({review})
             </span>
           </div>
-          <p className="text-[10px] sm:text-xs text-muted-foreground mb-2 line-clamp-2 flex-grow max-w-[200px]">
+          <p className="text-xs text-muted-foreground line-clamp-2 flex-1">
             {description}
           </p>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm sm:text-base font-bold text-primary truncate max-w-[100px]">
+          <div className="mt-2">
+            <span className="text-base font-bold text-primary">
               ${price.toFixed(2)}
             </span>
           </div>
         </div>
+
+        <div className="w-full flex flex-row gap-x-2 px-3 pb-3">
+          {cardActionBtns.map((btn, index) => (
+            <Button
+              key={index}
+              variant={btn.variant}
+              className="w-1/2 h-8 text-xs flex items-center justify-center gap-1 cursor-pointer"
+              onClick={btn.onClick}
+            >
+              {btn.icon && btn.icon}
+              <span>{btn.title}</span>
+            </Button>
+          ))}
+        </div>
       </Link>
-      <div className="w-full flex flex-col gap-1 px-2 sm:px-3 pb-2 sm:pb-3">
-        {cardActionBtns.map((btn, index) => (
-          <Button
-            key={index}
-            variant={btn.variant}
-            className="w-full cursor-pointer h-7 sm:h-8 text-xs px-2 whitespace-nowrap overflow-hidden text-ellipsis flex items-center justify-center gap-1"
-            onClick={btn.onClick}
-          >
-            {btn.icon && btn.icon}
-            <span className="truncate">{btn.title}</span>
-          </Button>
-        ))}
-      </div>
     </div>
   );
 }

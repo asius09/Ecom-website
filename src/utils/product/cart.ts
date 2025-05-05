@@ -1,88 +1,101 @@
+"use client";
 import { toast } from "sonner";
-import { supabase } from "@/utils/supabase/client";
 import { AppDispatch } from "@/lib/store/store";
-import {
-  addToCart,
-  removeFromCart,
-} from "@/app/api/products/users/cart/action";
-import {
-  optimisticUpdateStart,
-  optimisticUpdateEnd,
-  updateQuantity,
-} from "@/lib/store/slices/cartSlice";
+import { addToCart, removeFromCart, setCartItems } from "@/lib/store/features/cartSlice";
+import { CartItem } from "@/types/cartItem";
+import { nanoid } from "nanoid";
 
 export const handleAddToCart = async (
   productId: string,
   userId: string,
+  dispatch: AppDispatch,
   quantity: number = 1
 ) => {
+  const tempCartItem: CartItem = {
+    id: `temp-${nanoid()}`,
+    product_id: productId,
+    user_id: userId,
+    quantity,
+  };
+
   try {
-    const isAddedToCart = await addToCart(productId, userId, quantity);
-    if (isAddedToCart) {
-      toast.success("Product added to cart successfully!");
-      return true;
+    // Optimistically update local state
+    dispatch(addToCart(tempCartItem));
+
+    const response = await fetch("/api/user/cart", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        product_id: productId,
+        user_id: userId,
+        quantity,
+      }),
+    });
+
+    const data = await response.json();
+    if (data.statusText !== "success") {
+      throw new Error("Failed to add to cart");
     }
-    return false;
+
+    // Update store with actual data from server
+    const cartResponse = await fetch("/api/user/cart");
+    const cartData = await cartResponse.json();
+    if (cartData.statusText === "success") {
+      dispatch(setCartItems(cartData.data));
+    }
+
+    toast.success("Product added to cart successfully!");
   } catch (error) {
-    toast.error("Failed to add product to cart");
+    // If API call fails, remove the temporary item
+    dispatch(removeFromCart(tempCartItem.id));
+    toast.error("Something went wrong while adding to cart");
     console.error("Error adding to cart:", error);
-    return false;
   }
 };
 
 export const handleRemoveFromCart = async (
   cartItemId: string,
-  userId: string
-) => {
-  try {
-    const isRemoved = await removeFromCart(cartItemId, userId);
-    if (isRemoved) {
-      toast.success("Product removed from cart successfully!");
-      return true;
-    }
-    return false;
-  } catch (error) {
-    toast.error("Failed to remove product from cart");
-    console.error("Error removing from cart:", error);
-    return false;
-  }
-};
-
-export const handleUpdateCartQuantity = async (
-  cartItemId: string,
-  newQuantity: number,
+  userId: string,
   dispatch: AppDispatch
 ) => {
+  const storedId = cartItemId; // Store the id for potential rollback
+
   try {
-    // Start optimistic update
-    dispatch(optimisticUpdateStart(cartItemId));
+    // Optimistically update local state
+    dispatch(removeFromCart(cartItemId));
 
-    // Local update first
-    dispatch(updateQuantity({ id: cartItemId, quantity: newQuantity }));
+    const response = await fetch("/api/user/cart", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: cartItemId, user_id: userId }),
+    });
 
-    // Sync with database
-    const { error } = await supabase
-      .from("cart_items")
-      .update({ quantity: newQuantity })
-      .eq("id", cartItemId);
-
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    // Revert on error
-    const { data: originalItem } = await supabase
-      .from("cart_items")
-      .select("quantity")
-      .eq("id", cartItemId)
-      .single();
-
-    if (originalItem) {
-      dispatch(
-        updateQuantity({ id: cartItemId, quantity: originalItem.quantity })
-      );
+    const data = await response.json();
+    if (data.statusText !== "success") {
+      throw new Error("Failed to remove from cart");
     }
-    throw error;
-  } finally {
-    dispatch(optimisticUpdateEnd(cartItemId));
+
+    // Update store with actual data from server
+    const cartResponse = await fetch("/api/user/cart");
+    const cartData = await cartResponse.json();
+    if (cartData.statusText === "success") {
+      dispatch(setCartItems(cartData.data));
+    }
+
+    toast.success("Product removed from cart successfully!");
+  } catch (error) {
+    // If API call fails, re-fetch the cart to restore state
+    const cartResponse = await fetch("/api/user/cart");
+    const cartData = await cartResponse.json();
+    if (cartData.statusText === "success") {
+      dispatch(setCartItems(cartData.data));
+    }
+    
+    toast.error("Something went wrong while removing from cart");
+    console.error("Error removing from cart:", error);
   }
 };

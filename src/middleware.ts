@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*", // protects /dashboard and all nested routes
+    "/admin/:path*", // protects /dashboard and all nested routes
     "/account/:path*", // protects /account/*
     "/cart/:path*", // protects /cart/*
     "/wishlist/:path*", // protects /wishlist/*

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,10 +13,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useDropzone, type DropzoneOptions } from "react-dropzone";
-import { createProduct } from "@/app/api/products/admin/action";
-import { Product } from "@/types/product";
-import { uploadImage } from "@/utils/supabase/uploadImage";
+import {
+  removeImageFromStorage,
+  uploadImage,
+} from "@/utils/supabase/uploadImage";
 import { toast } from "sonner";
+import { createProduct, updateProduct } from "@/utils/product/admin";
+import { useAppDispatch } from "@/lib/hooks";
+import { Product } from "@/types/product";
 
 interface ProductFormData {
   name: string;
@@ -24,18 +28,71 @@ interface ProductFormData {
   price: string;
   quantity: number;
   images: File[];
+  imageUrl?: string;
 }
 
-export function ProductComposer() {
+interface ProductComposerProps {
+  product?: Product;
+  buttonText?: React.ReactNode;
+}
+
+export function ProductComposer({
+  product,
+  buttonText = "Create Product",
+}: ProductComposerProps) {
+  const dispatch = useAppDispatch();
   const [formData, setFormData] = useState<ProductFormData>({
-    name: "",
-    description: "",
-    price: "",
-    quantity: 0,
+    name: product?.name || "",
+    description: product?.description || "",
+    price: product?.price.toString() || "",
+    quantity: product?.stock_quantity || 0,
     images: [],
+    imageUrl: product?.image_url || "",
   });
   const [isOpen, setIsOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name,
+        description: product.description,
+        price: product.price.toString(),
+        quantity: product.stock_quantity,
+        images: [],
+        imageUrl: product.image_url,
+      });
+    }
+  }, [product]);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.name.trim()) newErrors.name = "Product name is required";
+    if (!formData.description.trim())
+      newErrors.description = "Description is required";
+    if (!formData.price.trim() || isNaN(parseFloat(formData.price)))
+      newErrors.price = "Valid price is required";
+    if (formData.quantity <= 0)
+      newErrors.quantity = "Quantity must be greater than 0";
+    if (formData.images.length === 0 && !formData.imageUrl)
+      newErrors.images = "At least one image is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleRemoveImage = async () => {
+    if (formData.imageUrl) {
+      try {
+        await removeImageFromStorage(formData.imageUrl);
+        setFormData((prev) => ({ ...prev, imageUrl: "" }));
+        toast.success("Image removed successfully");
+      } catch (error) {
+        toast.error("Failed to remove image");
+      }
+    }
+  };
 
   const dropzoneOptions: DropzoneOptions = {
     accept: {
@@ -45,7 +102,9 @@ export function ProductComposer() {
       setFormData((prev) => ({
         ...prev,
         images: [...prev.images, ...acceptedFiles],
+        imageUrl: "", // Clear existing URL when new files are added
       }));
+      setErrors((prev) => ({ ...prev, images: "" }));
     },
   };
 
@@ -56,37 +115,72 @@ export function ProductComposer() {
   ) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+    setErrors((prev) => ({ ...prev, [id]: "" }));
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, quantity: Number(e.target.value) }));
+    const value = Number(e.target.value);
+    setFormData((prev) => ({ ...prev, quantity: value }));
+    setErrors((prev) => ({
+      ...prev,
+      quantity: value > 0 ? "" : "Quantity must be greater than 0",
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      toast.error("Please fill out all required fields correctly");
+      return;
+    }
+
     setIsUploading(true);
+    let uploadedUrl: string = formData.imageUrl || "";
+    let oldImageUrl = formData.imageUrl;
 
     try {
-      let imageUrl = "";
       if (formData.images.length > 0) {
-        const uploadedUrl = await uploadImage(formData.images[0]);
-        if (!uploadedUrl) {
+        const url = await uploadImage(formData.images[0]);
+        if (!url) {
           throw new Error("Failed to upload image");
         }
-        imageUrl = uploadedUrl;
+        uploadedUrl = url;
+
+        // Remove old image if it exists and was replaced
+        if (oldImageUrl && oldImageUrl !== url) {
+          await removeImageFromStorage(oldImageUrl);
+        }
       }
 
-      const product: Omit<Product, "id" | "createdAt" | "updatedAt"> = {
-        name: formData.name,
-        description: formData.description,
-        price: parseFloat(formData.price),
-        stock_quantity: formData.quantity,
-        review: 0,
-        image_url: imageUrl,
-      };
+      if (product) {
+        await updateProduct(
+          product.id,
+          {
+            name: formData.name,
+            description: formData.description,
+            price: parseFloat(formData.price),
+            stock_quantity: formData.quantity,
+            image_url: uploadedUrl,
+            review: product.review,
+            created_at: product.created_at,
+          },
+          dispatch
+        );
+      } else {
+        await createProduct({
+          product: {
+            name: formData.name,
+            description: formData.description,
+            price: parseFloat(formData.price),
+            stock_quantity: formData.quantity,
+            image_url: uploadedUrl,
+            review: 0,
+          },
+          dispatch,
+        });
+      }
 
-      await createProduct(product);
-      toast.success("Product created successfully");
       setIsOpen(false);
       setFormData({
         name: "",
@@ -94,11 +188,19 @@ export function ProductComposer() {
         price: "",
         quantity: 0,
         images: [],
+        imageUrl: "",
       });
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create product"
+      setErrors({});
+      toast.success(
+        product
+          ? "Product updated successfully"
+          : "Product created successfully"
       );
+    } catch (error) {
+      toast.error("An error occurred while processing your request");
+      if (uploadedUrl && !product) {
+        await removeImageFromStorage(uploadedUrl);
+      }
     } finally {
       setIsUploading(false);
     }
@@ -107,36 +209,56 @@ export function ProductComposer() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Create Product</Button>
+        <Button variant="outline">{buttonText}</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent
+        className="sm:max-w-[600px]"
+        aria-describedby="dialog-description"
+      >
         <DialogHeader>
-          <DialogTitle>Create New Product</DialogTitle>
+          <DialogTitle>
+            {product ? "Edit Product" : "Create New Product"}
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <section className="space-y-2">
-            <Label htmlFor="name">Product Name</Label>
+            <Label htmlFor="name">Product Name *</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={handleChange}
-              required
+              aria-invalid={!!errors.name}
+              aria-describedby="name-error"
             />
+            {errors.name && (
+              <p id="name-error" className="text-sm text-red-500">
+                {errors.name}
+              </p>
+            )}
           </section>
 
-          <section className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+          <section className="space-y-2" aria-describedby="description-section">
+            <Label htmlFor="description">Product Description *</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={handleChange}
-              required
+              aria-invalid={!!errors.description}
+              aria-describedby={
+                errors.description ? "description-error" : "description-section"
+              }
+              className="min-h-[120px] resize-y"
             />
+            {errors.description && (
+              <p id="description-error" className="text-sm text-red-600 mt-1">
+                {errors.description}
+              </p>
+            )}
           </section>
 
           <section className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Price</Label>
+              <Label htmlFor="price">Price *</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
                   $
@@ -148,31 +270,53 @@ export function ProductComposer() {
                   value={formData.price}
                   onChange={handleChange}
                   className="pl-7"
-                  required
+                  aria-invalid={!!errors.price}
+                  aria-describedby="price-error"
                 />
               </div>
+              {errors.price && (
+                <p id="price-error" className="text-sm text-red-500">
+                  {errors.price}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label htmlFor="quantity">Quantity *</Label>
               <Input
                 id="quantity"
                 type="number"
                 value={formData.quantity}
                 onChange={handleQuantityChange}
-                required
+                min="1"
+                aria-invalid={!!errors.quantity}
+                aria-describedby="quantity-error"
               />
+              {errors.quantity && (
+                <p id="quantity-error" className="text-sm text-red-500">
+                  {errors.quantity}
+                </p>
+              )}
             </div>
           </section>
 
           <section className="space-y-2">
-            <Label>Product Images</Label>
+            <Label>Product Images *</Label>
             <div
               {...getRootProps()}
-              className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-500 transition-colors"
+              className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-gray-500 transition-colors ${
+                errors.images ? "border-red-500" : ""
+              }`}
+              aria-invalid={!!errors.images}
+              aria-describedby="images-error"
             >
               <input {...getInputProps()} />
               <p>Drag & drop some images here, or click to select files</p>
             </div>
+            {errors.images && (
+              <p id="images-error" className="text-sm text-red-500">
+                {errors.images}
+              </p>
+            )}
             {formData.images.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mt-4">
                 {formData.images.map((file, index) => (

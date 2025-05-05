@@ -35,6 +35,14 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/signup");
 
   if (session && isAuthRoute) {
+    const isAdmin = session.user.user_metadata.is_admin;
+    console.log("Is user admin?", isAdmin);
+    if (isAdmin && !request.nextUrl.pathname.startsWith("/admin")) {
+      console.log("Redirecting admin to admin dashboard");
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      return NextResponse.redirect(url);
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

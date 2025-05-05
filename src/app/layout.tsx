@@ -7,6 +7,7 @@ import { ProductsLoader } from "@/components/product/ProductLoader";
 import { StoreProvider } from "../lib/store/StoreProvider";
 import { Toaster } from "sonner";
 import { createClient } from "@/utils/supabase/server";
+import { permanentRedirect } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,7 +32,6 @@ export default async function RootLayout({
     const { data, error } = await supabase.auth.getUser();
     if (!error) {
       user = data.user;
-      
     }
   } catch (error) {
     console.error("Error fetching user:", error);

@@ -44,13 +44,6 @@ export function Navbar({ user }: { user: any }) {
       }
       if (user) {
         setUserId(user?.id);
-        console.log("Dispatching User to the store :", {
-          id: user?.id,
-          name: user?.user_metadata.name,
-          is_admin: user?.user_metadata.is_admin || false,
-          email: user?.email,
-          created_at: user?.created_at,
-        });
         dispatch(
           setUser({
             id: user?.id,

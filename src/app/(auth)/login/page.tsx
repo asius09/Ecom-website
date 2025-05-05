@@ -72,6 +72,7 @@ export default function LoginPage() {
       if (data.status === 200) {
         toast.success("Login successful!");
         const redirectPath = data?.data.user_metadata.is_admin ? "/admin" : "/";
+        console.log("Redirect Path is : ", redirectPath);
         router.push(redirectPath);
         router.refresh();
         return;

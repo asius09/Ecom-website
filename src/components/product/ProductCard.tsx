@@ -21,7 +21,6 @@ export function ProductCard({
 }: ProductCardProps) {
   const { id: userId } = useAppSelector((state) => state.user);
 
-  console.log(userId);
   const route = useRouter();
   const dispatch = useAppDispatch();
 

@@ -2,7 +2,7 @@
 
 import { ProductList } from "@/components/product/ProductList";
 import { Footer } from "@/components/Footer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Product } from "@/types/product";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HomeBanner } from "@/components/home/HomeBanner";
@@ -13,6 +13,7 @@ import { ProductListVarients } from "@/constants/productList";
 import { NewArrivalSection } from "@/components/home/NewArrivalSection";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useAppSelector } from "@/lib/hooks";
 
 const categories: CategoryItem[] = [
   {
@@ -47,63 +48,19 @@ const categories: CategoryItem[] = [
   },
 ];
 
-const demoProducts: Product[] = [
-  {
-    id: "b19b7f40-8e5a-4b1d-9c8a-7f3e5d6c4b2a",
-    name: "Wireless Bluetooth Earbuds",
-    description: "High-quality sound with noise cancellation",
-    price: 99.99,
-    image_url: "https://images.unsplash.com/photo-1590658006821-04f4008d5717",
-    review: 4.5,
-    stock_quantity: 100,
-    createdAt: "2023-01-01",
-  },
-  {
-    id: "c28a6f51-9e6b-4c2d-8d9a-6f4e5d7c3b1b",
-    name: "Smart Watch Pro",
-    description: "Fitness tracking and heart rate monitoring",
-    price: 199.99,
-    image_url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30",
-    review: 4.7,
-    stock_quantity: 50,
-    createdAt: "2023-02-15",
-  },
-  {
-    id: "d39b7f62-af7c-4d3e-9e8b-7f5e6d4c2b3c",
-    name: "Leather Jacket",
-    description: "Premium quality genuine leather jacket",
-    price: 299.99,
-    image_url: "https://images.unsplash.com/photo-1543076447-215ad9ba6923",
-    review: 4.8,
-    stock_quantity: 25,
-    createdAt: "2023-03-10",
-  },
-  {
-    id: "e48c8f73-bf8d-4e4f-af9c-8f6e7d5c3b4d",
-    name: "Blender Pro 2000",
-    description: "High-power kitchen blender with multiple settings",
-    price: 149.99,
-    image_url: "https://images.unsplash.com/photo-1585238342024-78d90f141f0d",
-    review: 4.6,
-    stock_quantity: 75,
-    createdAt: "2023-04-05",
-  },
-  {
-    id: "f59d9f84-cf9e-4f5f-bfad-9f7e8d6c4b5e",
-    name: "Anti-Aging Cream",
-    description: "Advanced formula for youthful skin",
-    price: 79.99,
-    image_url: "https://images.unsplash.com/photo-1591348278997-2d9b8e6c9c8f",
-    review: 4.4,
-    stock_quantity: 200,
-    createdAt: "2023-05-20",
-  },
-];
-
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>(demoProducts);
+  const { products } = useAppSelector((state) => state.products);
+  const [newArrivals, setNewArrivals] = useState<Product[] | null>(null);
   const [loading, setLoading] = useState(false);
-
+  useEffect(() => {
+    if (products.length === 0 || !products) return;
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    const undermonth = products.filter(
+      (product) => new Date(product.created_at) > oneMonthAgo
+    );
+    setNewArrivals(undermonth);
+  }, []);
   const bannerImages = [
     {
       src: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -116,8 +73,6 @@ export default function Home() {
       link: "/sale",
     },
   ];
-
- 
 
   if (loading) {
     return (
@@ -179,7 +134,7 @@ export default function Home() {
           categories={categories}
           variant={CategoryVariant.GRID}
         />
-        <NewArrivalSection products={products} />
+        <NewArrivalSection products={newArrivals} />
         <ProductList products={products} variant={ProductListVarients.SLIDER} />
       </section>
       <div className="flex justify-center py-8">

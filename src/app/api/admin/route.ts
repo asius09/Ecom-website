@@ -2,6 +2,45 @@ import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import { User } from "@/types/user";
 
+/**
+ * GET endpoint for fetching admin data
+ *
+ * Takes in URL parameters:
+ * - resource: string (required) - The resource to fetch (users, orders, products)
+ * - id: string (optional) - Specific ID to filter by
+ * - order_id: string (optional) - Specific order ID to filter by
+ * - product_id: string (optional) - Specific product ID to filter by
+ * - user_id: string (optional) - Specific user ID to filter by
+ *
+ * Returns:
+ * - Data for the specified resource with optional filtering
+ * - Error response if resource parameter is missing or invalid
+ *
+ * Client-side usage example:
+ *
+ * async function fetchAdminData(resource: string, filters?: Record<string, string>) {
+ *   const url = new URL('/api/admin');
+ *   url.searchParams.set('resource', resource);
+ *   if (filters) {
+ *     Object.entries(filters).forEach(([key, value]) => {
+ *       url.searchParams.set(key, value);
+ *     });
+ *   }
+ * 
+ *   const response = await fetch(url);
+ *   if (!response.ok) {
+ *     throw new Error('Failed to fetch admin data');
+ *   }
+ *   return await response.json();
+ * }
+ *
+ * // Example usage:
+ * // Fetch all users
+ * await fetchAdminData('users');
+ * 
+ * // Fetch specific product
+ * await fetchAdminData('products', { id: '123' });
+ */
 export async function GET(request: Request) {
   try {
     const supabase = await createClient({ isAdmin: true });

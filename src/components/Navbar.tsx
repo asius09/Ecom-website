@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { Logo } from "@/components/Logo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { setUser } from "@/lib/store/features/userSlice";
+import { Badge } from "@/components/ui/badge";
 
 interface MenuItem {
   type: string;
@@ -28,8 +29,11 @@ export function Navbar({ user }: { user: any }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { id: user_id } = useAppSelector((state) => state.user);
-  const [userId, setUserId] = useState<string | undefined>(user?.id);
-  const [cartItemCount, setCartItemCount] = useState(0);
+  const { itemCount } = useAppSelector((state) => state.cart);
+  const [userId, setUserId] = useState<string | undefined>(
+    user?.id || user_id || undefined
+  );
+  const [cartItemCount, setCartItemCount] = useState(itemCount);
   const [wishlistItemCount, setWishlistItemCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -40,12 +44,18 @@ export function Navbar({ user }: { user: any }) {
       }
       if (user) {
         setUserId(user?.id);
-
+        console.log("Dispatching User to the store :", {
+          id: user?.id,
+          name: user?.user_metadata.name,
+          is_admin: user?.user_metadata.is_admin || false,
+          email: user?.email,
+          created_at: user?.created_at,
+        });
         dispatch(
           setUser({
             id: user?.id,
             name: user?.user_metadata.name,
-            is_admin: user?.user_metadata.is_admin,
+            is_admin: user?.user_metadata.is_admin || false,
             email: user?.email,
             created_at: user?.created_at,
           })
@@ -113,14 +123,17 @@ export function Navbar({ user }: { user: any }) {
       href: `/wishlist/${userId}`,
       label: "Wishlist",
       icon: (
-        <>
+        <div className="relative">
           <Heart className="h-5 w-5" />
-          {wishlistItemCount !== 0 ? (
-            <span className="absolute -top-1 -right-0.5 bg-primary text-primary-foreground rounded-full text-xs px-1.5 py-0.5">
-              {wishlistItemCount}
-            </span>
-          ) : null}
-        </>
+          {wishlistItemCount > 0 && (
+            <Badge
+              className="absolute -top-2 -right-2 h-4 w-4 p-0 flex items-center justify-center bg-red-700 text-[10px] text-white shadow-sm"
+              variant="default"
+            >
+              1
+            </Badge>
+          )}
+        </div>
       ),
       active: pathname.startsWith("/wishlist"),
       className: "hidden md:flex",
@@ -130,14 +143,17 @@ export function Navbar({ user }: { user: any }) {
       href: `/cart/${userId}`,
       label: "Cart",
       icon: (
-        <>
-          <ShoppingCart className="h-5 w-5" />
-          {cartItemCount !== 0 ? (
-            <span className="absolute -top-1 -right-0.5 bg-primary text-primary-foreground rounded-full text-xs px-1.5 py-0.5">
+        <div className="relative">
+          <ShoppingCart className="h-5 w-5 text-primary" />
+          {cartItemCount > 0 && (
+            <Badge
+              className="absolute -top-2 -right-2 h-4 w-4 p-0 flex items-center justify-center bg-red-700 text-[10px] text-white shadow-sm"
+              variant="default"
+            >
               {cartItemCount}
-            </span>
-          ) : null}
-        </>
+            </Badge>
+          )}
+        </div>
       ),
       active: pathname.startsWith("/cart"),
     },
@@ -148,6 +164,10 @@ export function Navbar({ user }: { user: any }) {
       getInitialData();
     }
   }, [pathname, user]);
+
+  useEffect(() => {
+    setCartItemCount(itemCount);
+  }, [itemCount]);
 
   if (pathname === "/login" || pathname === "/signup") {
     return null;

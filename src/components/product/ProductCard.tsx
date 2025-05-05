@@ -20,36 +20,40 @@ export function ProductCard({
   review,
 }: ProductCardProps) {
   const { id: userId } = useAppSelector((state) => state.user);
+
+  console.log(userId);
   const route = useRouter();
   const dispatch = useAppDispatch();
+
+  const handleCartAction = async (e: React.MouseEvent, isBuyNow = false) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!userId) {
+      route.push("/login");
+      return;
+    }
+
+    try {
+      const res = await handleAddToCart(id, userId, dispatch);
+      if (isBuyNow && res) {
+        route.push(`/cart/${userId}`);
+      }
+    } catch (error) {
+      console.error("Error during cart action:", error);
+    }
+  };
 
   const cardActionBtns = [
     {
       title: "Add to Cart",
       icon: <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />,
-      onClick: async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        try {
-          await handleAddToCart(id, userId!, dispatch);
-        } catch (error) {
-          console.error("Error adding to cart:", error);
-        }
-      },
+      onClick: (e: React.MouseEvent) => handleCartAction(e),
       variant: "outline" as const,
     },
     {
       title: "Buy Now",
-      onClick: async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        try {
-          await handleAddToCart(id, userId!, dispatch);
-          route.push(`/cart/${userId}`);
-        } catch (error) {
-          console.error("Error during Buy Now:", error);
-        }
-      },
+      onClick: (e: React.MouseEvent) => handleCartAction(e, true),
       variant: "default" as const,
     },
   ];

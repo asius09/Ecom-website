@@ -8,29 +8,43 @@ import {
 } from "@/lib/store/features/wishlistSlice";
 import { nanoid } from "nanoid";
 
+/**
+ * Handles toggling a product in the user's wishlist
+ *
+ * @param {string} productId - The ID of the product to toggle
+ * @param {string} userId - The ID of the user performing the action
+ * @param {AppDispatch} dispatch - Redux dispatch function
+ * @returns {Promise<boolean>} - Returns true if product was added, false if removed
+ *
+ * This function performs the following operations:
+ * 1. Checks if the product exists in the user's wishlist
+ * 2. If exists, removes it from wishlist
+ * 3. If doesn't exist, adds it to wishlist
+ * 4. Uses optimistic updates for better UX
+ * 5. Syncs with server and updates Redux store
+ * 6. Shows toast notifications for success/error states
+ */
 export const handleToggleWishlist = async (
   productId: string,
   userId: string,
   dispatch: AppDispatch
 ) => {
-  console.log('Starting wishlist toggle for product:', productId, 'user:', userId);
   const tempId = `temp-${nanoid()}`; // Generate temporary ID for optimistic update
-  console.log('Generated temporary ID:', tempId);
 
   try {
-    console.log('Checking if item exists in wishlist...');
+    // Check if product exists in wishlist
     const checkResponse = await fetch(
       `/api/user/wishlist?user_id=${userId}&product_id=${productId}`
     );
     const checkData = await checkResponse.json();
-    console.log('Check response:', checkData);
 
     if (checkData.data && checkData.data.length > 0) {
-      console.log('Item exists in wishlist, removing...');
+      // Remove from wishlist if exists
       const existingId = checkData.data[0].id;
-      console.log('Removing item with ID:', existingId);
+      // First dispatch the removal to store
       dispatch(removeFromWishlist({ wishlistId: existingId }));
 
+      // Then make API request
       const deleteResponse = await fetch("/api/user/wishlist", {
         method: "DELETE",
         headers: {
@@ -40,32 +54,29 @@ export const handleToggleWishlist = async (
       });
 
       const deleteData = await deleteResponse.json();
-      console.log('Delete response:', deleteData);
       if (deleteData.statusText !== "success") {
+        // If API fails, restore the item in store
+        const wishlistResponse = await fetch("/api/user/wishlist");
+        const wishlistData = await wishlistResponse.json();
+        if (wishlistData.statusText === "success") {
+          dispatch(setWishlist(wishlistData.data));
+        }
         throw new Error("Failed to remove from wishlist");
       }
 
-      console.log('Fetching updated wishlist from server...');
-      const wishlistResponse = await fetch("/api/user/wishlist");
-      const wishlistData = await wishlistResponse.json();
-      console.log('Updated wishlist data:', wishlistData);
-      if (wishlistData.statusText === "success") {
-        dispatch(setWishlist(wishlistData.data));
-      }
-
       toast.success("Removed from wishlist!");
-      console.log('Successfully removed from wishlist');
       return false;
     } else {
-      console.log('Item does not exist in wishlist, adding...');
+      // Add to wishlist if doesn't exist
       const tempItem = {
         id: tempId,
         product_id: productId,
         user_id: userId,
       };
-      console.log('Adding temporary item:', tempItem);
+      // First dispatch the addition to store
       dispatch(addToWishlist(tempItem));
 
+      // Then make API request
       const addResponse = await fetch("/api/user/wishlist", {
         method: "POST",
         headers: {
@@ -75,34 +86,19 @@ export const handleToggleWishlist = async (
       });
 
       const addData = await addResponse.json();
-      console.log('Add response:', addData);
       if (addData.statusText !== "success") {
+        // If API fails, remove the item from store
+        dispatch(removeFromWishlist({ wishlistId: tempId }));
         throw new Error("Failed to add to wishlist");
       }
 
-      console.log('Fetching updated wishlist from server...');
-      const wishlistResponse = await fetch("/api/user/wishlist");
-      const wishlistData = await wishlistResponse.json();
-      console.log('Updated wishlist data:', wishlistData);
-      if (wishlistData.statusText === "success") {
-        dispatch(setWishlist(wishlistData.data));
-      }
-
       toast.success("Added to wishlist!");
-      console.log('Successfully added to wishlist');
       return true;
     }
   } catch (error) {
-    console.error('Error in wishlist toggle:', error);
-    console.log('Attempting to restore wishlist state...');
-    const wishlistResponse = await fetch("/api/user/wishlist");
-    const wishlistData = await wishlistResponse.json();
-    console.log('Restored wishlist data:', wishlistData);
-    if (wishlistData.statusText === "success") {
-      dispatch(setWishlist(wishlistData.data));
-    }
-
     toast.error("Failed to update wishlist");
-    return false;
+    throw new Error("Wishlist failed to add or remove item: " + error);
   }
 };
+
+

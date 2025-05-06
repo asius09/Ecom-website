@@ -1,6 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
-import { Product } from "@/types/product";
 import { supabaseTable } from "@/constants/subabase";
 
 /**
@@ -78,7 +77,7 @@ export async function GET(request: Request) {
   } catch (error) {
     return NextResponse.json({
       data: null,
-      error: "Internal server error",
+      error: error instanceof Error ? error.message : "Internal server error",
       status: 500,
       statusText: "failed",
     });
@@ -219,10 +218,11 @@ export async function POST(request: Request) {
       status: 201,
       statusText: "success",
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json({
       data: null,
-      error: "Internal server error",
+      error: errorMessage,
       status: 500,
       statusText: "failed",
     });
@@ -336,10 +336,9 @@ export async function DELETE(request: Request) {
   } catch (error) {
     return NextResponse.json({
       data: null,
-      error: "Internal server error",
+      error: error instanceof Error ? error.message : "Internal server error",
       status: 500,
       statusText: "failed",
     });
   }
 }
-

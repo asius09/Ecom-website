@@ -4,65 +4,63 @@ import { useState, useEffect } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+type Theme = "light" | "dark";
 
 interface ModeToggleProps {
   label?: boolean;
+  className?: string;
 }
 
-export function ModeToggle({ label }: ModeToggleProps) {
+export function ModeToggle({ label, className }: ModeToggleProps) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState<boolean>(false);
+  const [mounted, setMounted] = useState(false);
+
+  const currentTheme = theme as Theme;
 
   const toggleTheme = () => {
-    theme === "light" ? setTheme("dark") : setTheme("light");
+    setTheme(currentTheme === "light" ? "dark" : "light");
   };
 
-  const getThemeLabel = () => {
-    return theme === "light" ? "Light" : "Dark";
-  };
-
-  const getThemeIcon = () => {
-    return theme === "light" ? (
-      <Sun className="h-[1.2rem] w-[1.2rem] text-foreground" />
-    ) : (
-      <Moon className="h-[1.2rem] w-[1.2rem] text-foreground" />
-    );
-  };
+  const themeLabel = currentTheme === "light" ? "Light" : "Dark";
+  const ThemeIcon = currentTheme === "light" ? Sun : Moon;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!mounted) {
-    // Prevent rendering anything theme-dependent until mounted
     return (
       <Button
         variant="outline"
         size="sm"
-        className="hover:bg-accent/50 border-border rounded-sm px-2"
+        className={cn(
+          "hover:bg-accent/50 border-border rounded-sm px-2",
+          className
+        )}
         aria-label="Toggle theme"
-        role="button"
         disabled
-      >
-        {/* Maybe show a spinner or empty icon */}
-      </Button>
+      />
     );
   }
+
   return (
     <Button
       variant="outline"
       size="sm"
-      className={`hover:bg-accent/50 border-border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm ${
-        label ? "px-4" : "px-2"
-      }`}
+      className={cn(
+        "hover:bg-accent/50 border-border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm",
+        label ? "px-4" : "px-2",
+        className
+      )}
       onClick={toggleTheme}
-      aria-label="Toggle theme"
-      role="button"
+      aria-label={`Toggle theme (currently ${themeLabel} mode)`}
     >
-      {getThemeIcon()}
+      <ThemeIcon className="h-[1.2rem] w-[1.2rem] text-foreground" />
       {label && (
         <span className="ml-2 text-sm font-medium text-foreground">
-          {getThemeLabel()}
+          {themeLabel}
         </span>
       )}
     </Button>

@@ -45,32 +45,33 @@ export async function uploadImage(file: File): Promise<string | null> {
   }
 }
 
-
 /**
  * Extracts the storage path from a Supabase Storage URL
- * 
+ *
  * This function takes a Supabase Storage URL and extracts the relative path
  * to the file within the specified bucket. This is useful for operations
  * that require the file path rather than the full public URL.
- * 
+ *
  * @param url - The full public URL of the file in Supabase Storage
  * @param bucketName - The name of the storage bucket where the file is stored
  * @returns The relative path to the file within the bucket, or null if the URL is invalid
  */
-function extractStoragePathFromUrl(url: string, bucketName: string): string | null {
+function extractStoragePathFromUrl(
+  url: string,
+  bucketName: string
+): string | null {
   const pattern = new RegExp(`/storage/v1/object/public/${bucketName}/(.*)$`);
   const match = url.match(pattern);
   return match ? match[1] : null;
 }
 
-
 /**
  * Removes an image from Supabase Storage
- * 
+ *
  * This function takes a public URL of an image stored in Supabase Storage and deletes it.
  * It first extracts the storage path from the URL using the extractStoragePathFromUrl function,
  * then uses the Supabase client to remove the file from the 'products' bucket.
- * 
+ *
  * @param url - The public URL of the image to be removed
  * @returns Promise<boolean> - Returns true if the image was successfully removed, false otherwise
  */
@@ -99,4 +100,3 @@ export async function removeImageFromStorage(url: string): Promise<boolean> {
     return false;
   }
 }
-

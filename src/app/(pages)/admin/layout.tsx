@@ -9,8 +9,7 @@ export default async function AdminLayout({
 }) {
   const supabase = await createClient();
   const {
-    data: { user },
-    error,
+    data: { user }
   } = await supabase.auth.getUser();
 
   // Check if user is admin

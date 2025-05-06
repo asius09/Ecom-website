@@ -7,7 +7,7 @@ import { useState } from "react";
 import { QuantitySelector } from "@/components/cart/QuantitySelector";
 import { Badge } from "@/components/ui/badge";
 import { Product } from "@/types/product";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { handleAddToCart } from "@/utils/product/cart";
 import { useRouter } from "next/navigation";
 import { WishlistButton } from "../wishlist/WishlistButton";
@@ -17,6 +17,7 @@ interface ProductDetailProps {
 }
 
 export default function ProductDetail({ product }: ProductDetailProps) {
+  const dispatch = useAppDispatch();
   const { id: userId } = useAppSelector((state) => state.user);
   const [quantity, setQuantity] = useState<number>(1);
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       icon: <ShoppingCart className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />,
       onClick: async () => {
         try {
-          const success = await handleAddToCart(product.id, userId!);
+          await handleAddToCart(product.id, userId!, dispatch, 1);
         } catch (error) {
           console.error("Error adding to cart:", error);
         }
@@ -38,10 +39,8 @@ export default function ProductDetail({ product }: ProductDetailProps) {
       title: "Buy Now",
       onClick: async () => {
         try {
-          const success = await handleAddToCart(product.id, userId!);
-          if (success) {
-            router.push(`/cart/${userId}`);
-          }
+          await handleAddToCart(product.id, userId!, dispatch, 1);
+          router.push(`/cart/${userId}`);
         } catch (error) {
           console.error("Error during Buy Now:", error);
         }

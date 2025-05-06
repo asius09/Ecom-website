@@ -5,6 +5,7 @@ import { Heart } from "lucide-react";
 import { useAppSelector } from "@/lib/hooks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductListVarients } from "@/constants/productList";
+import Link from "next/link";
 
 export default function WishlistPage() {
   const { slug: userId } = useParams();
@@ -65,12 +66,12 @@ export default function WishlistPage() {
             <Heart className="inline w-4 h-4 text-primary" /> icon to add items
             to your wishlist.
           </p>
-          <a
+          <Link
             href="/"
             className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
           >
             Browse Products
-          </a>
+          </Link>
         </div>
       )}
     </main>

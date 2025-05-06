@@ -6,86 +6,38 @@ import { supabaseTable } from "@/constants/subabase";
 /**
  * PUT endpoint for updating a product
  *
- * This endpoint handles updating a product in the database. It performs the following operations:
- * 1. Accepts a product ID from the URL path
- * 2. Accepts update data in the request body
- * 3. Updates the product in the 'products' table
- * 4. Returns the updated product data
+ * This API route handles product updates in the database. It expects:
+ * - productId in the URL params
+ * - Update data in the request body
  *
- * URL Parameters:
- * - productId: string (required) - Product ID to update (from URL path)
+ * The endpoint performs the following operations:
+ * 1. Validates the product ID
+ * 2. Validates the update data
+ * 3. Updates the product in the database
+ * 4. Returns the updated product or appropriate error
  *
- * Request Body:
- * - name?: string - New product name
- * - description?: string - New product description
- * - price?: number - New product price
- * - stock_quantity?: number - New stock quantity
- * - image_url?: string - New image URL
- *
- * Response Structure:
- * - On Success (200 OK):
- *   {
- *     data: Product, // Updated product data
- *     status: 200,
- *     statusText: "success"
- *   }
- * - On Error:
- *   {
- *     data: null,
- *     error: string, // Error message describing the issue
- *     status: 500, // HTTP status code
- *     statusText: "failed"
- *   }
+ * @param request - The incoming HTTP request
+ * @param params - Object containing route parameters
+ * @returns NextResponse with either:
+ *   - Success: Updated product data
+ *   - Error: Appropriate error message and status code
  *
  * Error Scenarios:
- * - Missing productId parameter (400 Bad Request)
- * - Missing update data (400 Bad Request)
- * - Database operation failure (500 Internal Server Error)
- * - Product not found (404 Not Found)
- * - Unexpected server error (500 Internal Server Error)
- *
- * Client-side Example with Debugging:
- *
- * async function updateProduct(productId: string, updateData: Partial<Product>) {
- *   try {
- *     console.log('Attempting to update product with ID:', productId);
- *     console.log('Update data:', updateData);
- *
- *     const response = await fetch(`/api/admin/products/${productId}`, {
- *       method: 'PUT',
- *       headers: {
- *         'Content-Type': 'application/json',
- *       },
- *       body: JSON.stringify(updateData),
- *     });
- *
- *     const result = await response.json();
- *     console.log('Update API Response:', result);
- *
- *     if (result.statusText === 'success') {
- *       console.log('Product updated successfully');
- *       // Update local state or refetch products
- *       return result.data;
- *     } else {
- *       console.error('Update failed with error:', result.error);
- *       throw new Error(result.error || 'Failed to update product');
- *     }
- *   } catch (error) {
- *     console.error('Error updating product:', error);
- *     // Handle error (show toast, etc.)
- *     throw error;
- *   }
- * }
+ * - 400: Missing product ID or update data
+ * - 404: Product not found
+ * - 500: Database error or server error
  */
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { productId: string } }
-) {
+export async function PUT(request: Request) {
   try {
+    // Initialize Supabase client with admin privileges
     const supabase = await createClient({ isAdmin: true });
-    const { productId } = params;
+    // Extract productId from the URL
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split("/");
+    const productId = pathParts[pathParts.length - 1];
 
+    // Validate product ID
     if (!productId) {
       return NextResponse.json({
         data: null,
@@ -95,8 +47,8 @@ export async function PUT(
       });
     }
 
+    // Parse and validate update data
     const updateData: Partial<Product> = await request.json();
-
     if (!updateData || Object.keys(updateData).length === 0) {
       return NextResponse.json({
         data: null,
@@ -106,12 +58,14 @@ export async function PUT(
       });
     }
 
+    // Perform database update
     const { data, error } = await supabase
       .from(supabaseTable.PRODUCTS)
       .update(updateData)
       .eq("id", productId)
       .select();
 
+    // Handle database errors
     if (error) {
       return NextResponse.json({
         data: null,
@@ -121,6 +75,7 @@ export async function PUT(
       });
     }
 
+    // Handle case where product is not found
     if (!data || data.length === 0) {
       return NextResponse.json({
         data: null,
@@ -130,6 +85,7 @@ export async function PUT(
       });
     }
 
+    // Return success response with updated product
     const updatedProduct: Product = data[0];
     return NextResponse.json({
       data: updatedProduct,
@@ -137,9 +93,10 @@ export async function PUT(
       statusText: "success",
     });
   } catch (error) {
+    // Handle unexpected errors
     return NextResponse.json({
       data: null,
-      error: "Internal server error",
+      error: "Internal server error: " + error,
       status: 500,
       statusText: "failed",
     });

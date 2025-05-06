@@ -2,50 +2,45 @@ import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 import { User } from "@/types/user";
 
+type ResourceType = "users" | "orders" | "products";
+type UpdateType = "user" | "user_metadata";
+type UserUpdates = Partial<User>;
+type ErrorResponse = { error: string; status: number };
+type SuccessResponse<T> = { data: T; status: number };
+
+interface UserMetadataPayload {
+  data: Partial<User>;
+}
+
+interface UserUpdatePayload extends Partial<User> {
+  id: string;
+}
+
 /**
  * GET endpoint for fetching admin data
  *
- * Takes in URL parameters:
- * - resource: string (required) - The resource to fetch (users, orders, products)
+ * @param {Request} request - The incoming request object
+ * @returns {Promise<NextResponse<SuccessResponse<unknown> | ErrorResponse>>} - Response with data or error
+ *
+ * URL Parameters:
+ * - resource: string (required) - The resource type to fetch (users, orders, products)
  * - id: string (optional) - Specific ID to filter by
  * - order_id: string (optional) - Specific order ID to filter by
  * - product_id: string (optional) - Specific product ID to filter by
  * - user_id: string (optional) - Specific user ID to filter by
  *
  * Returns:
- * - Data for the specified resource with optional filtering
- * - Error response if resource parameter is missing or invalid
- *
- * Client-side usage example:
- *
- * async function fetchAdminData(resource: string, filters?: Record<string, string>) {
- *   const url = new URL('/api/admin');
- *   url.searchParams.set('resource', resource);
- *   if (filters) {
- *     Object.entries(filters).forEach(([key, value]) => {
- *       url.searchParams.set(key, value);
- *     });
- *   }
- * 
- *   const response = await fetch(url);
- *   if (!response.ok) {
- *     throw new Error('Failed to fetch admin data');
- *   }
- *   return await response.json();
- * }
- *
- * // Example usage:
- * // Fetch all users
- * await fetchAdminData('users');
- * 
- * // Fetch specific product
- * await fetchAdminData('products', { id: '123' });
+ * - 200: Success response with requested data
+ * - 400: Bad request if resource parameter is missing or invalid
+ * - 500: Internal server error if database query fails
  */
-export async function GET(request: Request) {
+export async function GET(
+  request: Request
+): Promise<NextResponse<SuccessResponse<unknown> | ErrorResponse>> {
   try {
     const supabase = await createClient({ isAdmin: true });
     const url = new URL(request.url);
-    const resource = url.searchParams.get("resource");
+    const resource = url.searchParams.get("resource") as ResourceType | null;
     const id = url.searchParams.get("id");
     const orderId = url.searchParams.get("order_id");
     const productId = url.searchParams.get("product_id");
@@ -96,9 +91,11 @@ export async function GET(request: Request) {
       data,
       status: 200,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json({
-      error: "Internal server error",
+      error: errorMessage,
       status: 500,
     });
   }
@@ -107,50 +104,30 @@ export async function GET(request: Request) {
 /**
  * PUT endpoint for updating user information
  *
- * Takes in URL parameters:
- * - user: string (required) - The ID of the user to update
- * - type: string (optional) - Specifies if updating 'user_metadata' (defaults to 'user')
+ * @param {Request} request - The incoming request object
+ * @returns {Promise<NextResponse<SuccessResponse<unknown> | ErrorResponse>>} - Response with updated data or error
  *
- * Takes in request body:
+ * URL Parameters:
+ * - user: string (required) - The ID of the user to update
+ * - type: string (optional) - Specifies update type ('user' or 'user_metadata', defaults to 'user')
+ *
+ * Request Body:
  * - updates: object (required) - Fields to update as key-value pairs
  *
- * Updates:
- * - The specified user's auth information using supabase.updateUser
- * - If type is 'user_metadata', updates user metadata
- * - If the update contains fields that exist in the users table, updates that table as well
- *
- * Client-side usage example:
- *
- * async function updateUser(userId: string, updates: Record<string, any>, type: 'user' | 'user_metadata' = 'user') {
- *   const response = await fetch(`/api/admin?user=${userId}&type=${type}`, {
- *     method: 'PUT',
- *     headers: {
- *       'Content-Type': 'application/json',
- *     },
- *     body: JSON.stringify(updates)
- *   });
- *
- *   if (!response.ok) {
- *     throw new Error('Failed to update user');
- *   }
- *
- *   return await response.json();
- * }
- *
- * // Example usage:
- * // Update user metadata
- * await updateUser('user-id', { is_admin: true }, 'user_metadata');
- *
- * // Update user profile
- * await updateUser('user-id', { full_name: 'John Doe', email: 'john@example.com' });
+ * Returns:
+ * - 200: Success response with updated user data
+ * - 400: Bad request if parameters are missing or invalid
+ * - 500: Internal server error if update operation fails
  */
-export async function PUT(request: Request) {
+export async function PUT(
+  request: Request
+): Promise<NextResponse<SuccessResponse<unknown> | ErrorResponse>> {
   try {
     const supabase = await createClient({ isAdmin: true });
     const url = new URL(request.url);
     const userId = url.searchParams.get("user");
-    const type = url.searchParams.get("type") || "user";
-    const updates = await request.json();
+    const type = (url.searchParams.get("type") || "user") as UpdateType;
+    const updates = (await request.json()) as UserUpdates;
 
     if (!userId) {
       return NextResponse.json({
@@ -173,10 +150,9 @@ export async function PUT(request: Request) {
       });
     }
 
-    let updatePayload: any = { id: userId };
+    let updatePayload: UserUpdatePayload | UserMetadataPayload = { id: userId };
 
     if (type === "user_metadata") {
-      // Get current user metadata
       const { data: user, error: fetchError } = await supabase.auth.getUser();
 
       if (fetchError) {
@@ -186,17 +162,16 @@ export async function PUT(request: Request) {
         });
       }
 
-      // Merge new updates with existing metadata
-      updatePayload.data = {
-        ...(user.user.user_metadata || {}),
-        ...updates,
+      updatePayload = {
+        data: {
+          ...(user.user.user_metadata || {}),
+          ...updates,
+        },
       };
     } else {
-      // For regular user updates
       updatePayload = { ...updatePayload, ...updates };
     }
 
-    // Update auth user
     const { data: authUser, error: authError } =
       await supabase.auth.updateUser(updatePayload);
 
@@ -207,22 +182,21 @@ export async function PUT(request: Request) {
       });
     }
 
-    // Check if any updates should be applied to users table
     const usersTableFields = ["email", "phone", "full_name", "avatar_url"];
     const usersTableUpdates = Object.keys(updates).filter((key) =>
       usersTableFields.includes(key)
     );
 
     if (usersTableUpdates.length > 0) {
-      const updateData = usersTableUpdates.reduce(
+      const updateData = usersTableUpdates.reduce<Record<string, unknown>>(
         (acc, key) => {
-          acc[key] = updates[key];
+          const typedKey = key as keyof UserUpdates;
+          acc[key] = updates[typedKey];
           return acc;
         },
-        {} as Record<string, any>
+        {}
       );
 
-      // Update users table
       const { data: dbUser, error: dbError } = await supabase
         .from("users")
         .update(updateData)
@@ -250,9 +224,11 @@ export async function PUT(request: Request) {
       data: authUser,
       status: 200,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json({
-      error: "Internal server error",
+      error: errorMessage,
       status: 500,
     });
   }

@@ -3,12 +3,7 @@
 import { useAppSelector } from "@/lib/hooks";
 import { CartItem } from "@/components/cart/CartItem";
 
-interface CartListProps {
-  onQuantityChange: (itemId: string, quantity: number) => void;
-  onRemove: (itemId: string) => void;
-}
-
-export function CartList({ onQuantityChange, onRemove }: CartListProps) {
+export function CartList() {
   const cartItems = useAppSelector((state) => state.cart.items);
   const products = useAppSelector((state) => state.products.products);
 

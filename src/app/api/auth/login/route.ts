@@ -30,14 +30,14 @@ export async function POST(request: Request) {
     }
 
     // Check if user exists in the users table
-    const { data: userData, error: userError } = await supabase
+    const { data: userData } = await supabase
       .from("users")
       .select("id")
       .eq("email", data.user?.email)
       .single();
 
     if (!userData) {
-      const { error: insertError } = await supabase.from("users").insert([
+      await supabase.from("users").insert([
         {
           id: data.user.id, // must match auth.uid()
           email: data.user.email,
@@ -54,11 +54,16 @@ export async function POST(request: Request) {
       status: 200,
       statusText: "success",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    const statusCode =
+      error instanceof Error && "status" in error ? Number(error.status) : 500;
+
     return NextResponse.json({
       data: null,
-      error: `Failed to login: ${error.message ?? error}`,
-      status: error.status ?? 500,
+      error: `Failed to login: ${errorMessage}`,
+      status: statusCode,
       statusText: "failed",
     });
   }

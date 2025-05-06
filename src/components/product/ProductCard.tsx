@@ -8,8 +8,7 @@ import { handleAddToCart } from "@/utils/product/cart";
 import { useRouter } from "next/navigation";
 import { WishlistButton } from "../wishlist/WishlistButton";
 import Link from "next/link";
-
-interface ProductCardProps extends Product {}
+import Image from "next/image";
 
 export function ProductCard({
   id,
@@ -18,7 +17,7 @@ export function ProductCard({
   price,
   image_url,
   review,
-}: ProductCardProps) {
+}: Product) {
   const { id: userId } = useAppSelector((state) => state.user);
 
   const route = useRouter();
@@ -62,11 +61,10 @@ export function ProductCard({
       <Link href={`/product/${id}`} className="flex flex-col h-full">
         {image_url && (
           <div className="relative aspect-[4/3] flex-shrink-0">
-            <img
+            <Image
               src={image_url}
               alt={name}
               className="w-full h-full object-cover"
-              loading="lazy"
             />
             <div
               className="absolute top-2 right-2"

@@ -100,12 +100,18 @@ export async function GET(request: Request) {
       status: 200,
       statusText: "success",
     });
-  } catch (error: any) {
-    console.error(`Unexpected error in products API: ${error.message}`);
-    console.error("Error stack:", error.stack);
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : "An unexpected error occurred";
+    const errorStack =
+      error instanceof Error ? error.stack : "No stack trace available";
+
+    console.error(`Unexpected error in products API: ${errorMessage}`);
+    console.error("Error stack:", errorStack);
+
     return NextResponse.json({
       data: null,
-      error: `Internal server error: ${error.message}`,
+      error: `Internal server error: ${errorMessage}`,
       status: 500,
       statusText: "failed",
     });

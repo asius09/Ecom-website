@@ -9,7 +9,7 @@ export function Footer() {
             <h3 className="text-lg font-semibold mb-3 sm:mb-4">About MyShop</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               MyShop is your one-stop destination for the latest products in
-              electronics, fashion, home goods, and more. We're committed to
+              electronics, fashion, home goods, and more. We&apos;re committed to
               providing quality products and excellent customer service.
             </p>
           </div>

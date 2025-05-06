@@ -32,21 +32,20 @@ export function CartItem({ item, product }: CartItemProps) {
     }
   };
 
-  const debouncedQuantityChange = debounce(
-    async (cartItem: CartItemType, qty: number) => {
-      try {
-        const newQuantity = quantity + qty;
-        console.log(
-          `Updating quantity for item ${cartItem.id} to ${newQuantity}`
-        );
-        await handleUpdateCartQuantity(cartItem, newQuantity, dispatch);
-        console.log(`Successfully updated quantity for item ${cartItem.id}`);
-      } catch (error) {
-        console.error("Failed to update the quantity: ", error);
-      }
-    },
-    300
-  );
+  const debouncedQuantityChange = debounce(async (...args: unknown[]) => {
+    try {
+      const [cartItem, qty] = args as [CartItemType, number];
+      const newQuantity = quantity + qty;
+      console.log(
+        `Updating quantity for item ${cartItem.id} to ${newQuantity}`
+      );
+      await handleUpdateCartQuantity(cartItem, newQuantity, dispatch);
+      console.log(`Successfully updated quantity for item ${cartItem.id}`);
+    } catch (error) {
+      console.error("Failed to update the quantity: ", error);
+      throw error;
+    }
+  }, 300);
 
   const onQuantityChange = async (cartItem: CartItemType, qty: number) => {
     console.log(

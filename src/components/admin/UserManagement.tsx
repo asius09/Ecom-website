@@ -23,7 +23,6 @@ import {
 
 export function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
   const [updatingRoles, setUpdatingRoles] = useState<Record<string, boolean>>(
     {}
   );
@@ -42,8 +41,6 @@ export function UserManagement() {
       } catch (error) {
         console.error("Error fetching users:", error);
         toast.error("Failed to load users");
-      } finally {
-        setLoading(false);
       }
     };
 

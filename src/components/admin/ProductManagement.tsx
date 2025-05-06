@@ -15,7 +15,7 @@ import { ProductComposer } from "./ProductComposer";
 import { Product } from "@/types/product";
 import { Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { deleteProduct, updateProduct } from "@/utils/product/admin";
+import { deleteProduct } from "@/utils/product/admin";
 import { useAppDispatch } from "@/lib/hooks";
 
 interface ProductManagementProps {

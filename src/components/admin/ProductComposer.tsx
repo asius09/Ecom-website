@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode, ChangeEvent, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { createProduct, updateProduct } from "@/utils/product/admin";
 import { useAppDispatch } from "@/lib/hooks";
 import { Product } from "@/types/product";
+import Image from "next/image";
 
 interface ProductFormData {
   name: string;
@@ -33,7 +34,7 @@ interface ProductFormData {
 
 interface ProductComposerProps {
   product?: Product;
-  buttonText?: React.ReactNode;
+  buttonText?: ReactNode;
 }
 
 export function ProductComposer({
@@ -49,8 +50,8 @@ export function ProductComposer({
     images: [],
     imageUrl: product?.image_url || "",
   });
-  const [isOpen, setIsOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export function ProductComposer({
     }
   }, [product]);
 
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = "Product name is required";
     if (!formData.description.trim())
@@ -82,18 +83,6 @@ export function ProductComposer({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleRemoveImage = async () => {
-    if (formData.imageUrl) {
-      try {
-        await removeImageFromStorage(formData.imageUrl);
-        setFormData((prev) => ({ ...prev, imageUrl: "" }));
-        toast.success("Image removed successfully");
-      } catch (error) {
-        toast.error("Failed to remove image");
-      }
-    }
-  };
-
   const dropzoneOptions: DropzoneOptions = {
     accept: {
       "image/*": [".jpeg", ".jpg", ".png"],
@@ -102,7 +91,7 @@ export function ProductComposer({
       setFormData((prev) => ({
         ...prev,
         images: [...prev.images, ...acceptedFiles],
-        imageUrl: "", // Clear existing URL when new files are added
+        imageUrl: "",
       }));
       setErrors((prev) => ({ ...prev, images: "" }));
     },
@@ -111,23 +100,43 @@ export function ProductComposer({
   const { getRootProps, getInputProps } = useDropzone(dropzoneOptions);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
     setErrors((prev) => ({ ...prev, [id]: "" }));
   };
 
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
-    setFormData((prev) => ({ ...prev, quantity: value }));
-    setErrors((prev) => ({
+  const handleQuantityChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10);
+
+    if (isNaN(value) || value < 0) {
+      setErrors((prev) => ({
+        ...prev,
+        quantity: "Quantity must be a positive integer",
+      }));
+      return;
+    }
+
+    setFormData((prev) => ({
       ...prev,
-      quantity: value > 0 ? "" : "Quantity must be greater than 0",
+      quantity: value,
     }));
+
+    if (value > 0) {
+      setErrors((prev) => ({
+        ...prev,
+        quantity: "",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        quantity: "Quantity must be greater than 0",
+      }));
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -137,7 +146,7 @@ export function ProductComposer({
 
     setIsUploading(true);
     let uploadedUrl: string = formData.imageUrl || "";
-    let oldImageUrl = formData.imageUrl;
+    const oldImageUrl = formData.imageUrl;
 
     try {
       if (formData.images.length > 0) {
@@ -147,7 +156,6 @@ export function ProductComposer({
         }
         uploadedUrl = url;
 
-        // Remove old image if it exists and was replaced
         if (oldImageUrl && oldImageUrl !== url) {
           await removeImageFromStorage(oldImageUrl);
         }
@@ -197,6 +205,7 @@ export function ProductComposer({
           : "Product created successfully"
       );
     } catch (error) {
+      console.error("Error processing product request:", error);
       toast.error("An error occurred while processing your request");
       if (uploadedUrl && !product) {
         await removeImageFromStorage(uploadedUrl);
@@ -260,7 +269,7 @@ export function ProductComposer({
             <div className="space-y-2">
               <Label htmlFor="price">Price *</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                <span className="absolute left极3 top-1/2 -translate-y-1/2 text-gray-500">
                   $
                 </span>
                 <Input
@@ -320,7 +329,7 @@ export function ProductComposer({
             {formData.images.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mt-4">
                 {formData.images.map((file, index) => (
-                  <img
+                  <Image
                     key={index}
                     src={URL.createObjectURL(file)}
                     alt={`preview-${index}`}

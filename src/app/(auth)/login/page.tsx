@@ -14,11 +14,9 @@ import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useAppDispatch } from "@/lib/hooks";
 
 export default function LoginPage() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -177,7 +175,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            <span>Don&apos;t have an account?</span>
             <Link
               href="/signup"
               className="font-medium text-primary hover:underline hover:text-primary/90"

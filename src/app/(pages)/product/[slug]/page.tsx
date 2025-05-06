@@ -45,6 +45,7 @@ export default function ProductDetailsPage() {
 
         setProduct(data);
       } catch (error) {
+        console.error("Error fetching product details:", error);
         setError("Failed to fetch product details");
       } finally {
         setLoading(false);

@@ -15,7 +15,10 @@ export function UserProfile() {
     name: storeUser.name || "",
     email: storeUser.email || "",
     is_admin: storeUser.is_admin || false,
-    created_at: storeUser.created_at || new Date().toISOString(),
+    created_at:
+      typeof storeUser.created_at === "string"
+        ? storeUser.created_at
+        : new Date().toISOString(),
   });
   const [isEditing, setIsEditing] = useState(false);
 

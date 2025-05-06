@@ -36,16 +36,8 @@ export function ProductsLoader() {
     }
   };
   useEffect(() => {
-    // Add a cleanup function to prevent memory leaks
-    let isMounted = true;
-    if (isMounted) {
-      fetchProducts();
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [dispatch]);
+    fetchProducts();
+  });
 
   return null;
 }

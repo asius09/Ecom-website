@@ -61,6 +61,7 @@ const mockOrders: Order[] = [
 
 export function OrderManagement() {
   const [orders, setOrders] = useState<Order[]>(mockOrders);
+  setOrders(mockOrders);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

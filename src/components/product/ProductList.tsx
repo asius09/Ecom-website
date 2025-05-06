@@ -11,7 +11,7 @@ import {
 import { Product } from "@/types/product";
 import { ProductListVarients } from "@/constants/productList";
 import Autoplay from "embla-carousel-autoplay";
-import React from "react";
+import { useRef } from "react";
 
 interface ProductGridProps {
   products: Product[];
@@ -25,8 +25,9 @@ export function ProductList({
   const isMobile = useIsMobile();
   const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
   const canSlide = products.length > 3;
-  const plugin = React.useRef(
-    Autoplay({ delay: 5000, stopOnInteraction: false })
+  const plugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
+  const featurePlugin = useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: false })
   );
 
   const renderGrid = () => (
@@ -41,7 +42,7 @@ export function ProductList({
           image_url={product.image_url}
           review={product.review}
           stock_quantity={product.stock_quantity}
-          createdAt={product.createdAt}
+          created_at={product.created_at}
         />
       ))}
     </div>
@@ -80,7 +81,7 @@ export function ProductList({
                   image_url={product.image_url}
                   review={product.review}
                   stock_quantity={product.stock_quantity}
-                  createdAt={product.createdAt}
+                  created_at={product.created_at}
                 />
               </div>
             </CarouselItem>
@@ -106,10 +107,6 @@ export function ProductList({
 
   const renderFeature = () => {
     const featuredProducts = products.slice(0, 8);
-    const featurePlugin = React.useRef(
-      Autoplay({ delay: 3000, stopOnInteraction: false })
-    );
-
     return (
       <div className="p-4">
         <h2 className="text-center text-2xl font-bold mb-4">
@@ -142,7 +139,7 @@ export function ProductList({
                     image_url={product.image_url}
                     review={product.review}
                     stock_quantity={product.stock_quantity}
-                    createdAt={product.createdAt}
+                    created_at={product.created_at}
                   />
                 </div>
               </CarouselItem>

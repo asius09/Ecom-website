@@ -12,13 +12,12 @@ import { supabaseTable } from "@/constants/subabase";
  * - Deleted cart item data if successful
  * - Error response if operation fails
  */
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: Request) {
   try {
     const supabase = await createClient();
-    const cartId = params.id;
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split("/");
+    const cartId = pathParts[pathParts.length - 1];
 
     if (!cartId) {
       return NextResponse.json({

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/ModeToggle";
 import { usePathname } from "next/navigation";
 import {
   ShoppingCart,
@@ -14,7 +13,7 @@ import {
   MapPin,
   Search,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { LogOutBtn } from "./auth/LogOutBtn";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -23,6 +22,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { setUser } from "@/lib/store/features/userSlice";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+interface UserData {
+  id?: string;
+  user_metadata?: {
+    name?: string;
+    is_admin?: boolean;
+  };
+  email?: string;
+  created_at?: string;
+}
 
 interface MenuItem {
   type: string;
@@ -35,8 +44,8 @@ interface MenuItem {
   onClick?: () => void;
 }
 
-export function Navbar({ user }: { user: any }) {
-  const isMobile = useIsMobile();
+export function Navbar({ user }: { user: UserData | null }) {
+  const isMobile: boolean = useIsMobile();
   const dispatch = useAppDispatch();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -50,44 +59,49 @@ export function Navbar({ user }: { user: any }) {
   const [wishlistItemCount, setWishlistItemCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const getInitialData = async () => {
-    try {
-      if (!userId) {
-        setLoading(true);
-      }
-      if (user) {
-        setUserId(user?.id);
-        dispatch(
-          setUser({
-            id: user?.id,
-            name: user?.user_metadata.name,
-            is_admin: user?.user_metadata.is_admin || false,
-            email: user?.email,
-            created_at: user?.created_at,
-          })
-        );
-
-        const [wishlistResponse, cartResponse] = await Promise.all([
-          fetch(`/api/user/wishlist?userId=${user.id}`),
-          fetch(`/api/user/cart?userId=${user.id}`),
-        ]);
-
-        if (wishlistResponse.status !== 200 || cartResponse.status !== 200) {
-          throw new Error("Failed to fetch user data");
+  const getInitialData = useCallback(
+    async (userId: string | undefined) => {
+      try {
+        if (!userId) {
+          setLoading(true);
+          return;
         }
 
-        const { wishlistRes } = await wishlistResponse.json();
-        const { cartRes } = await cartResponse.json();
+        if (user && user.id) {
+          setUserId(user.id);
+          dispatch(
+            setUser({
+              id: user.id,
+              name: user.user_metadata?.name || "",
+              is_admin: user.user_metadata?.is_admin || false,
+              email: user.email || "",
+              created_at: user.created_at || "",
+            })
+          );
 
-        setWishlistItemCount(wishlistRes?.length || 0);
-        setCartItemCount(cartRes?.length || 0);
+          const [wishlistResponse, cartResponse] = await Promise.all([
+            fetch(`/api/user/wishlist?userId=${user.id}`),
+            fetch(`/api/user/cart?userId=${user.id}`),
+          ]);
+
+          if (!wishlistResponse.ok || !cartResponse.ok) {
+            throw new Error("Failed to fetch user data");
+          }
+
+          const wishlistData = await wishlistResponse.json();
+          const cartData = await cartResponse.json();
+
+          setWishlistItemCount(wishlistData.data?.length || 0);
+          setCartItemCount(cartData.data?.length || 0);
+        }
+      } catch (error) {
+        console.error("Failed to get user data:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      throw new Error("Failed to get user data: " + error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [dispatch, user]
+  );
 
   const mobileMenu: MenuItem[] = [
     {
@@ -186,10 +200,9 @@ export function Navbar({ user }: { user: any }) {
           icon: <Search className="h-5 w-5 text-primary" />,
           onClick: (): void => {
             setSearchOpen(true);
-            setMobileMenuOpen(false); // Close mobile menu when search is opened
+            setMobileMenuOpen(false);
           },
         },
-        ,
         {
           type: "route",
           href: `/cart/${userId}`,
@@ -213,9 +226,9 @@ export function Navbar({ user }: { user: any }) {
 
   useEffect(() => {
     if (pathname !== "/login" && pathname !== "/signup" && !userId) {
-      getInitialData();
+      getInitialData(userId);
     }
-  }, [pathname, user]);
+  }, [pathname, userId, getInitialData]);
 
   useEffect(() => {
     setCartItemCount(itemCount);
@@ -228,7 +241,7 @@ export function Navbar({ user }: { user: any }) {
   if (loading && !userId) {
     return (
       <header className="border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="w-full flex h-16 items-center justify-between px-6">
+        <div className="w-full flex h-16 items-center justify-between px极6">
           <div className="flex items-center gap-6">
             <Skeleton className="h-8 w-32 rounded-md" />
           </div>
@@ -238,7 +251,7 @@ export function Navbar({ user }: { user: any }) {
           <div className="flex items-center gap-4">
             <Skeleton className="h-10 w-10 rounded-full" />
             <Skeleton className="h-10 w-10 rounded-full" />
-            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h极10 w-10 rounded-full" />
             <Skeleton className="h-10 w-10 rounded-full" />
           </div>
         </div>

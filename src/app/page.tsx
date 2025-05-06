@@ -15,9 +15,15 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAppSelector } from "@/lib/hooks";
 
+interface BannerImage {
+  src: string;
+  alt: string;
+  link: string;
+}
+
 const categories: CategoryItem[] = [
   {
-    src: "https://images.unsplash.com/photo-1523275335684-37898b极6baf30?q=80&w=2899&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    src: "https://images.unsplash.com/photo-152327533568极4-37898b6baf30?q=80&w=2899&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     alt: "Electronics",
     name: "Electronics",
     link: "/category/electronics",
@@ -35,13 +41,13 @@ const categories: CategoryItem[] = [
     link: "/category/home-kitchen",
   },
   {
-    src: "https://images.unsplash.com/photo-1601924994987-69e26d50dc26?q=80&w=2940&auto=format&fit=crop&ixlib=rb-极4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8f极A%3D%3D",
+    src: "https://images.unsplash.com/photo-1601924994987-69e26d50dc26?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     alt: "Beauty",
     name: "Beauty",
     link: "/category/beauty",
   },
   {
-    src: "https://images.unsplash.com/photo-1601924994987-69e26d50dc26?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3极fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    src: "https://images.unsplash.com/photo-1601924994987-69e26d50dc26?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     alt: "Sports",
     name: "Sports",
     link: "/category/sports",
@@ -51,17 +57,9 @@ const categories: CategoryItem[] = [
 export default function Home() {
   const { products } = useAppSelector((state) => state.products);
   const [newArrivals, setNewArrivals] = useState<Product[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    if (products.length === 0 || !products) return;
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    const undermonth = products.filter(
-      (product) => new Date(product.created_at) > oneMonthAgo
-    );
-    setNewArrivals(undermonth);
-  }, []);
-  const bannerImages = [
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const bannerImages: BannerImage[] = [
     {
       src: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       alt: "Fashion Collection",
@@ -74,6 +72,23 @@ export default function Home() {
     },
   ];
 
+  useEffect(() => {
+    if (!products || products.length === 0) {
+      setLoading(false);
+      return;
+    }
+
+    const oneMonthAgo: Date = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+
+    const recentProducts: Product[] = products.filter(
+      (product: Product) => new Date(product.created_at) > oneMonthAgo
+    );
+
+    setNewArrivals(recentProducts);
+    setLoading(false);
+  }, [products]);
+
   if (loading) {
     return (
       <main className="w-full">
@@ -83,7 +98,7 @@ export default function Home() {
 
         <section className="px-2 sm:px-4 md:px-6 pb-2 sm:pb-4">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-            {Array.from({ length: 5 }).map((_, i) => (
+            {Array.from({ length: 5 }).map((_, i: number) => (
               <div key={i} className="aspect-square">
                 <Skeleton className="h-full w-full" />
               </div>
@@ -92,8 +107,8 @@ export default function Home() {
 
           <div className="mb-8">
             <Skeleton className="h-8 w-48 mx-auto mb-4" />
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {Array.from({ length: 5 }).map((_, i) => (
+            <div className="grid grid-cols极2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {Array.from({ length: 5 }).map((_, i: number) => (
                 <div key={i}>
                   <Skeleton className="aspect-square mb-2" />
                   <Skeleton className="h-4 w-3/4 mb-1" />
@@ -106,7 +121,7 @@ export default function Home() {
           <div className="mb-8">
             <Skeleton className="h-8 w-48 mx-auto mb-4" />
             <div className="flex gap-4 overflow-hidden">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: 5 }).map((_, i: number) => (
                 <div key={i} className="min-w-[200px]">
                   <Skeleton className="aspect-square mb-2" />
                   <Skeleton className="h-4 w-3/4 mb-1" />
@@ -134,7 +149,7 @@ export default function Home() {
           categories={categories}
           variant={CategoryVariant.GRID}
         />
-        <NewArrivalSection products={newArrivals} />
+        <NewArrivalSection products={newArrivals ?? []} />
         <ProductList products={products} variant={ProductListVarients.SLIDER} />
       </section>
       <div className="flex justify-center py-8">

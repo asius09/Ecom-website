@@ -108,7 +108,9 @@ export const handleUpdateCartQuantity = async (
 
     toast.success("Cart quantity updated successfully!");
   } catch (err: unknown) {
-    dispatch(updateCartItemQuantity({ id: cartItem.id, quantity: initialQuantity }));
+    dispatch(
+      updateCartItemQuantity({ id: cartItem.id, quantity: initialQuantity })
+    );
     const error = err instanceof Error ? err : new Error("Unknown error");
     toast.error(error.message);
   }

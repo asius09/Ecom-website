@@ -34,17 +34,18 @@ export const handleToggleWishlist = async (
   try {
     // Check if product exists in wishlist
     const checkResponse = await fetch(
-      `/api/user/wishlist?user_id=${userId}&product_id=${productId}`
+      `/api/user/wishlist?user=${userId}&product=${productId}`
     );
     const checkData = await checkResponse.json();
 
     if (checkData.data && checkData.data.length > 0) {
       // Remove from wishlist if exists
       const existingId = checkData.data[0].id;
-      // First dispatch the removal to store
+
+      // Optimistic update - remove from store
       dispatch(removeFromWishlist({ wishlistId: existingId }));
 
-      // Then make API request
+      // API request to remove
       const deleteResponse = await fetch("/api/user/wishlist", {
         method: "DELETE",
         headers: {
@@ -55,13 +56,22 @@ export const handleToggleWishlist = async (
 
       const deleteData = await deleteResponse.json();
       if (deleteData.statusText !== "success") {
-        // If API fails, restore the item in store
-        const wishlistResponse = await fetch("/api/user/wishlist");
-        const wishlistData = await wishlistResponse.json();
-        if (wishlistData.statusText === "success") {
-          dispatch(setWishlist(wishlistData.data));
-        }
+        // If API fails, add back to store
+        dispatch(
+          addToWishlist({
+            id: existingId,
+            product_id: productId,
+            user_id: userId,
+          })
+        );
         throw new Error("Failed to remove from wishlist");
+      }
+
+      // On success, fetch updated wishlist
+      const wishlistResponse = await fetch("/api/user/wishlist");
+      const wishlistData = await wishlistResponse.json();
+      if (wishlistData.statusText === "success") {
+        dispatch(setWishlist(wishlistData.data));
       }
 
       toast.success("Removed from wishlist!");
@@ -73,10 +83,11 @@ export const handleToggleWishlist = async (
         product_id: productId,
         user_id: userId,
       };
-      // First dispatch the addition to store
+
+      // Optimistic update - add to store
       dispatch(addToWishlist(tempItem));
 
-      // Then make API request
+      // API request to add
       const addResponse = await fetch("/api/user/wishlist", {
         method: "POST",
         headers: {
@@ -87,9 +98,16 @@ export const handleToggleWishlist = async (
 
       const addData = await addResponse.json();
       if (addData.statusText !== "success") {
-        // If API fails, remove the item from store
+        // If API fails, remove from store
         dispatch(removeFromWishlist({ wishlistId: tempId }));
         throw new Error("Failed to add to wishlist");
+      }
+
+      // On success, fetch updated wishlist
+      const wishlistResponse = await fetch("/api/user/wishlist");
+      const wishlistData = await wishlistResponse.json();
+      if (wishlistData.statusText === "success") {
+        dispatch(setWishlist(wishlistData.data));
       }
 
       toast.success("Added to wishlist!");
@@ -97,8 +115,6 @@ export const handleToggleWishlist = async (
     }
   } catch (error) {
     toast.error("Failed to update wishlist");
-    throw new Error("Wishlist failed to add or remove item: " + error);
+    throw new Error("Wishlist operation failed: " + error);
   }
 };
-
-

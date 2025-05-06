@@ -3,11 +3,10 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
-import { ProductsLoader } from "@/components/product/ProductLoader";
 import { StoreProvider } from "../lib/store/StoreProvider";
 import { Toaster } from "sonner";
 import { createClient } from "@/utils/supabase/server";
-import { permanentRedirect } from "next/navigation";
+import { ProductsLoader } from "@/components/product/ProductLoader";
 
 const inter = Inter({ subsets: ["latin"] });
 

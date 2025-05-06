@@ -2,16 +2,12 @@
 import { ProductList } from "@/components/product/ProductList";
 import { useParams } from "next/navigation";
 import { Heart } from "lucide-react";
-import { useAppSelector, useAppDispatch } from "@/lib/hooks";
-import { useEffect } from "react";
-import { fetchWishlistProducts } from "@/app/api/products/users/wishlist/action";
-import { setWishlist } from "@/lib/store/features/wishlistSlice";
+import { useAppSelector } from "@/lib/hooks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductListVarients } from "@/constants/productList";
 
 export default function WishlistPage() {
   const { slug: userId } = useParams();
-  const dispatch = useAppDispatch();
   const { items: wishlistItems } = useAppSelector((state) => state.wishlist);
   const { products } = useAppSelector((state) => state.products);
   // Ensure userId is a string
@@ -21,21 +17,6 @@ export default function WishlistPage() {
   const wishlistProducts = products.filter((product) =>
     wishlistItems.some((items) => items.product_id === product.id)
   );
-
-  useEffect(() => {
-    if (!userIdString) return;
-
-    const fetchWishlist = async () => {
-      try {
-        const data = await fetchWishlistProducts(userIdString);
-        dispatch(setWishlist(data));
-      } catch (error) {
-        throw new Error(`Failed to fetch Wishlist Products: ${error}`);
-      }
-    };
-
-    fetchWishlist();
-  }, [userIdString, dispatch]);
 
   if (!userIdString) {
     return (

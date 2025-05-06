@@ -65,6 +65,10 @@ export function ProductCard({
               src={image_url}
               alt={name}
               className="w-full h-full object-cover"
+              width={300}
+              height={225}
+              priority
+              sizes="(max-width: 640px) 100vw, 50vw"
             />
             <div
               className="absolute top-2 right-2"
